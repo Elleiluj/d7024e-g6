@@ -9,7 +9,8 @@ version: "3"
 services:
   kademliaNodes:
   #kadlab:latest
-    image: alpine:latest # Make sure your Docker image has this name.
+  #alpine:latest
+    image: golang:1.19 # Make sure your Docker image has this name.
     stdin_open: true
     tty: true
     deploy:
@@ -25,6 +26,7 @@ services:
         max_attempts: 3
         window: 10s
 #    ports:
+#      - "8080:8080"
 #      - "4000:80"
     networks:
       - kademlia_network

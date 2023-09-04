@@ -1,16 +1,18 @@
 package main
 
 import (
-	"net/http"
+	"fmt"
+	/*"net/http"
 	"os"
 
 	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"
-)
+	"github.com/labstack/echo/v4/middleware"*/)
 
 func main() {
 
-	e := echo.New()
+	fmt.Println("Hello!")
+
+	/*e := echo.New()
 
 	e.Use(middleware.Logger())
 	e.Use(middleware.Recover())
@@ -28,5 +30,5 @@ func main() {
 		httpPort = "8080"
 	}
 
-	e.Logger.Fatal(e.Start(":" + httpPort))
+	e.Logger.Fatal(e.Start(":" + httpPort))*/
 }
