@@ -1,4 +1,4 @@
-FROM golang:1.19
+FROM alpine:latest
 
 #FROM alpine:latest
 
@@ -15,18 +15,18 @@ FROM golang:1.19
 # $ docker build . -t kadlab
 
 # Set destination for COPY
-WORKDIR /app
+#WORKDIR /app
 
 # Download Go modules
-COPY go.mod go.sum ./
-RUN go mod download
+#COPY go.mod go.sum ./
+#RUN go mod download
 
 # Copy the source code. Note the slash at the end, as explained in
 # https://docs.docker.com/engine/reference/builder/#copy
-COPY main/*.go ./
+#COPY main/*.go ./
 
 # Build
-RUN CGO_ENABLED=0 GOOS=linux go build -o /repository
+#RUN CGO_ENABLED=0 GOOS=linux go build -o /repository
 
 # To bind to a TCP port, runtime parameters must be supplied to the docker command.
 # But we can (optionally) document in the Dockerfile what ports
@@ -34,4 +34,4 @@ RUN CGO_ENABLED=0 GOOS=linux go build -o /repository
 # https://docs.docker.com/engine/reference/builder/#expose
 
 # Run
-CMD [ "/repository" ]
+#CMD [ "/repository" ]

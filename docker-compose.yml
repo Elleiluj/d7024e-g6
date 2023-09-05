@@ -10,12 +10,12 @@ services:
   kademliaNodes:
   #kadlab:latest
   #alpine:latest
-    image: golang:1.19 # Make sure your Docker image has this name.
+    image: alpine:latest # Make sure your Docker image has this name.
     stdin_open: true
     tty: true
     deploy:
       mode: replicated
-      replicas: 5  
+      replicas: 50  
 #        resources:
 #           limits:
 #              cpus: "0.1"
