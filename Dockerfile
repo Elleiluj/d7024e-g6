@@ -1,4 +1,4 @@
-FROM alpine:latest
+FROM larjim/kademlialab:latest
 
 #FROM alpine:latest
 

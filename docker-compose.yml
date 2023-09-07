@@ -10,7 +10,7 @@ services:
   kademliaNodes:
   #kadlab:latest
   #alpine:latest
-    image: alpine:latest # Make sure your Docker image has this name.
+    image: larjim/kademlialab:latest # Make sure your Docker image has this name.
     stdin_open: true
     tty: true
     deploy:
