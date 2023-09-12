@@ -31,7 +31,7 @@ func main() {
 	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{
 		Filters: filters.NewArgs(filters.KeyValuePair{
 			Key:   "network",
-			Value: "comdockerdevenvironmentscode_kademlia_network",
+			Value: "d7024e-g6_kademlia_network",
 		}),
 	})
 	if err != nil {
@@ -59,7 +59,7 @@ func main() {
 		AttachStdout: true,
 		AttachStderr: true,
 		Tty:          false,
-		Cmd:          []string{"ping", targetContainerName, "-c", "1"},
+		Cmd:          []string{"ping", targetContainerName, "-c", "2"},
 	})
 	if err != nil {
 		panic(err)

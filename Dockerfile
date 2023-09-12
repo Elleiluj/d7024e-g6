@@ -1,4 +1,7 @@
-FROM golang:alpine
+FROM larjim/kademlialab:latest
+
+RUN apt-get update && apt-get install -y iputils-ping
+CMD bash
 
 #FROM larjim/kademlialab:latest
 
