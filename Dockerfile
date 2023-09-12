@@ -1,4 +1,6 @@
-FROM larjim/kademlialab:latest
+FROM golang:alpine
+
+#FROM larjim/kademlialab:latest
 
 #FROM alpine:latest
 

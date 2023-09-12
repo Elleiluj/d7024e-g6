@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
@@ -43,20 +44,22 @@ func main() {
 	}
 
 	// Container you want to ping
-	targetContainerID := containers[0].ID
+	targetContainer := containers[0].Names[0]
+	sourceContainer := containers[1].Names[0]
 
-	sourceContainerID := containers[1].ID
+	targetContainerName := strings.ReplaceAll(targetContainer, "/", "")
+	sourceContainerName := strings.ReplaceAll(sourceContainer, "/", "")
 
-	fmt.Println("Source Container ID:", sourceContainerID)
-	fmt.Println("Target Container ID:", targetContainerID)
+	fmt.Println("Source Container ID:", sourceContainerName)
+	fmt.Println("Target Container ID:", targetContainerName)
 
 	// Run a command in the source container to ping the target container
-	response, err := cli.ContainerExecCreate(context.Background(), sourceContainerID, types.ExecConfig{
+	response, err := cli.ContainerExecCreate(context.Background(), sourceContainerName, types.ExecConfig{
 		AttachStdin:  false,
 		AttachStdout: true,
 		AttachStderr: true,
 		Tty:          false,
-		Cmd:          []string{"ping", targetContainerID, "-c", "3"},
+		Cmd:          []string{"ping", targetContainerName, "-c", "1"},
 	})
 	if err != nil {
 		panic(err)

@@ -10,7 +10,8 @@ services:
   kademliaNodes:
   #kadlab:latest
   #alpine:latest
-    image: larjim/kademlialab:latest # Make sure your Docker image has this name.
+  #larjim/kademlialab:latest
+    image: golang:alpine # Make sure your Docker image has this name.
     stdin_open: true
     tty: true
     deploy:
