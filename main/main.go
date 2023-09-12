@@ -1,34 +1,84 @@
 package main
 
 import (
+	"context"
 	"fmt"
-	/*"net/http"
-	"os"
 
-	"github.com/labstack/echo/v4"
-	"github.com/labstack/echo/v4/middleware"*/)
+	"github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/filters"
+	"github.com/docker/docker/client"
+)
 
 func main() {
 
-	fmt.Println("Hello!")
+	// Test
+	fmt.Println("Hello!!")
 
-	/*e := echo.New()
-
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
-
-	e.GET("/", func(c echo.Context) error {
-		return c.HTML(http.StatusOK, "Hello, Docker! <3")
-	})
-
-	e.GET("/health", func(c echo.Context) error {
-		return c.JSON(http.StatusOK, struct{ Status string }{Status: "OK"})
-	})
-
-	httpPort := os.Getenv("PORT")
-	if httpPort == "" {
-		httpPort = "8080"
+	// Create a Docker client
+	cli, err := client.NewClientWithOpts(client.FromEnv)
+	if err != nil {
+		panic(err)
 	}
 
-	e.Logger.Fatal(e.Start(":" + httpPort))*/
+	// List containers on the same network, without specifying network
+	/*containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{})
+	if err != nil {
+		panic(err)
+	}*/
+
+	// List containers on the same network, specifying network
+	containers, err := cli.ContainerList(context.Background(), types.ContainerListOptions{
+		Filters: filters.NewArgs(filters.KeyValuePair{
+			Key:   "network",
+			Value: "comdockerdevenvironmentscode_kademlia_network",
+		}),
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	// Print all containers
+	for _, container := range containers {
+		fmt.Printf("%s %s\n", container.ID[:10], container.Image)
+	}
+
+	// Container you want to ping
+	targetContainerID := containers[0].ID
+
+	sourceContainerID := containers[1].ID
+
+	fmt.Println("Source Container ID:", sourceContainerID)
+	fmt.Println("Target Container ID:", targetContainerID)
+
+	// Run a command in the source container to ping the target container
+	response, err := cli.ContainerExecCreate(context.Background(), sourceContainerID, types.ExecConfig{
+		AttachStdin:  false,
+		AttachStdout: true,
+		AttachStderr: true,
+		Tty:          false,
+		Cmd:          []string{"ping", targetContainerID, "-c", "3"},
+	})
+	if err != nil {
+		panic(err)
+	}
+
+	// Start the exec instance to run the command
+	execResp, err := cli.ContainerExecAttach(context.Background(), response.ID, types.ExecStartCheck{})
+	if err != nil {
+		panic(err)
+	}
+
+	defer execResp.Close()
+
+	buffer := make([]byte, 1024) // Create a buffer for reading
+	bytesRead, err := execResp.Reader.Read(buffer)
+	if err != nil {
+		fmt.Println("Error reading file:", err)
+		return
+	}
+
+	// Process the data
+	data := buffer[:bytesRead]
+	fmt.Println(string(data))
+
 }
