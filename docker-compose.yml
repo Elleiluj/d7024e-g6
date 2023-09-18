@@ -11,7 +11,7 @@ services:
   #kadlab:latest
   #alpine:latest
   #larjim/kademlialab:latest
-    image: kademlialab_with_ping # Make sure your Docker image has this name.
+    image: kademlialab # Make sure your Docker image has this name.
     stdin_open: true
     tty: true
     deploy:
