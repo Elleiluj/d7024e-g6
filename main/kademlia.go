@@ -26,15 +26,17 @@ func (kademlia *Kademlia) LookupContact(target *Contact) []Contact {
 	closestNodes := kademlia.routingTable.FindClosestContacts(target.ID, alpha) // Find K closest nodes
 	var responses []Contact
 	network := &Network{}
+	network.kademlia = kademlia
 
-	for range closestNodes {
-		response := network.SendFindContactMessage(target)
-		if response != nil {
-			responses = append(responses, response...)
+	for i := 0; i < len(closestNodes); i++ {
+		if (closestNodes[i].ID).Equals(kademlia.me.ID) {
+			fmt.Printf("Lookup contact of: %s, found: %v.", target.ID, closestNodes)
+			return closestNodes
 		}
+		network.SendFindContactMessage(target)
 	}
 
-	fmt.Printf("Lookup contact of: %s, found: %s.", target.ID, responses)
+	fmt.Printf("Lookup contact of: %s, found: %v.", target.ID, responses)
 
 	return responses
 }
@@ -51,9 +53,13 @@ func (kademlia *Kademlia) JoinNetwork(knownNode *Contact) {
 	fmt.Printf("Joining network through %s...", knownNode.String())
 	kademlia.routingTable.AddContact(*knownNode)
 
-	kademlia.LookupContact(knownNode)
+	//kademlia.LookupContact(knownNode)
+	responses := kademlia.LookupContact(&kademlia.me)
 
-	// TODO: refresh k-buckets further away (lookup random node withing the k-bucket range)
+	for i := 0; i < len(responses); i++ {
+		kademlia.routingTable.AddContact(responses[i])
+	}
+	// TODO: refresh k-buckets further away (lookup random node within the k-bucket range)
 
 }
 
