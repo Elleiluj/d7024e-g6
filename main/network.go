@@ -3,9 +3,23 @@ package main
 import (
 	"fmt"
 	"net"
+	"strings"
 )
 
+const pingMessage = "ping"
+const pingResponse = "ping response"
+const findContactMessage = "find contact"
+const findContactResponse = "find contact response"
+const findDataMessage = "find data"
+const findDataResponse = "find data response"
+const storeMessage = "store"
+const storeResponse = "store response"
+const messageDivider = ";"
+
+const port = 4000
+
 type Network struct {
+	kademlia *Kademlia
 }
 
 // full ip
@@ -26,7 +40,7 @@ func Listen(ip string) {
 	fmt.Println("UDP server is listening on", ip)
 
 	// Buffer to hold incoming data
-	buffer := make([]byte, 1024)
+	buffer := make([]byte, 4000)
 
 	for {
 		// Read data from UDP connection
@@ -38,20 +52,43 @@ func Listen(ip string) {
 
 		// Process received data
 		data := buffer[:n]
-		fmt.Printf("Received UDP message from %s: %s\n", addr, string(data))
+		fmt.Printf("Received message from %s: %s\n", addr, string(data))
 
 		// Respond to the client
 		// maybe do in separate function, to simplify testing
 		// depending on what the request was, we want different responses
-		response := []byte("Hello from UDP server")
+		/*response := []byte("Hello from UDP server")
+		addr.Port = port
 		_, err = conn.WriteToUDP(response, addr)
 		if err != nil {
 			fmt.Println("Error sending UDP response:", err)
-		}
+		}*/
+		addr.Port = port
+		handleResponse(string(data), addr, conn)
 	}
 }
 
-func handleResponse(data string, address string) {
+func handleResponse(data string, address *net.UDPAddr, conn *net.UDPConn) {
+	network := &Network{}
+	messageSplit := strings.Split(data, ";")
+	messageType := messageSplit[0]
+	switch messageType {
+	case pingMessage:
+		network.SendPingResponse(address, conn)
+	case findContactMessage:
+		fmt.Println("Find contact message!")
+	case findContactResponse:
+		fmt.Println("Find contact response!")
+	case findDataMessage:
+		fmt.Println("Find data message!")
+	case findDataResponse:
+		fmt.Println("Find data response!")
+	case storeMessage:
+		fmt.Println("Store message!")
+	case storeResponse:
+		fmt.Println("Store response!")
+	default:
+	}
 
 }
 
@@ -62,8 +99,6 @@ func (network *Network) SendPingMessage(contact *Contact) {
 		fmt.Printf("Error connecting to contact: %v\n", err)
 	}
 	defer conn.Close()
-
-	pingMessage := "Ping"
 
 	// Send the ping message as bytes to the contact's address
 	// TODO: hande response, this is just temporary
@@ -76,7 +111,7 @@ func (network *Network) SendPingMessage(contact *Contact) {
 
 }
 
-func (network *Network) SendFindContactMessage(contact *Contact) []Contact {
+func (network *Network) SendFindContactMessage(contact *Contact) {
 	// TODO
 }
 
@@ -86,4 +121,32 @@ func (network *Network) SendFindDataMessage(hash string) {
 
 func (network *Network) SendStoreMessage(data []byte) {
 	// TODO
+}
+
+func (network *Network) SendPingResponse(address *net.UDPAddr, conn *net.UDPConn) {
+
+	// Send the ping response as bytes to the contact's address
+	_, err := conn.WriteToUDP([]byte(pingResponse), address)
+	if err != nil {
+		fmt.Println("Error sending UDP response:", err)
+	}
+
+	fmt.Printf("Sent ping response to %s\n", address.String())
+
+}
+
+func (network *Network) SendFindContactResponse(contact *Contact) {
+	// TODO
+}
+
+func (network *Network) SendFindDataResponse(hash string) {
+	// TODO
+}
+
+func (network *Network) SendStoreResponse(data []byte) {
+	// TODO
+}
+
+func (network *Network) HandleFindContact(contact *Contact) {
+
 }
