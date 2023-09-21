@@ -77,6 +77,8 @@ func handleResponse(data string, address *net.UDPAddr, conn *net.UDPConn) {
 		network.SendPingResponse(address, conn)
 	case findContactMessage:
 		fmt.Println("Find contact message!")
+		results := network.HandleFindContact(messageSplit[1], messageSplit[2])
+		network.SendFindContactResponse(&results, address, conn)
 	case findContactResponse:
 		fmt.Println("Find contact response!")
 	case findDataMessage:
@@ -111,8 +113,25 @@ func (network *Network) SendPingMessage(contact *Contact) {
 
 }
 
-func (network *Network) SendFindContactMessage(contact *Contact) {
-	// TODO
+func (network *Network) SendFindContactMessage(sender *Kademlia, receiver *Contact, target *Contact) {
+	// Establish udp connection
+	conn, err := net.Dial("udp", receiver.Address)
+	if err != nil {
+		fmt.Printf("Error connecting to contact: %v\n", err)
+	}
+	defer conn.Close()
+
+	// Send the ping message as bytes to the contact's address
+	// TODO: hande response, this is just temporary
+	message := findContactMessage + ";" + sender.me.String() + ";" + target.String()
+	_, err = conn.Write([]byte(message))
+	if err != nil {
+		fmt.Printf("Error writing to contact: %v\n", err)
+	}
+
+	fmt.Printf("Sent find contact message to %s\n", receiver.Address)
+
+	fmt.Printf("SendFindContactMessage - sender: %s, toFind: %s", sender.me.Address, receiver.Address)
 }
 
 func (network *Network) SendFindDataMessage(hash string) {
@@ -135,8 +154,15 @@ func (network *Network) SendPingResponse(address *net.UDPAddr, conn *net.UDPConn
 
 }
 
-func (network *Network) SendFindContactResponse(contact *Contact) {
-	// TODO
+func (network *Network) SendFindContactResponse(contacts *[]Contact, address *net.UDPAddr, conn *net.UDPConn) {
+	message := ""
+	// Send the ping response as bytes to the contact's address
+	_, err := conn.WriteToUDP([]byte(pingResponse), address)
+	if err != nil {
+		fmt.Println("Error sending UDP response:", err)
+	}
+
+	fmt.Printf("Sent ping response to %s\n", address.String())
 }
 
 func (network *Network) SendFindDataResponse(hash string) {
@@ -147,6 +173,8 @@ func (network *Network) SendStoreResponse(data []byte) {
 	// TODO
 }
 
-func (network *Network) HandleFindContact(contact *Contact) {
-
+func (network *Network) HandleFindContact(sender string, target string) []Contact {
+	// results := sender.LookupContact(target)
+	// return results
+	return []Contact{}
 }

@@ -25,24 +25,19 @@ func NewKademliaNode(address string) (kademlia Kademlia) {
 func (kademlia *Kademlia) LookupContact(target *Contact) []Contact {
 	closestNodes := kademlia.routingTable.FindClosestContacts(target.ID, alpha) // Find K closest nodes
 	network := &Network{}
-	network.kademlia = kademlia
 
 	for i := 0; i < len(closestNodes); i++ {
-		if (closestNodes[i].ID).Equals(kademlia.me.ID) {
-			fmt.Printf("Lookup contact of: %s, found: %v.", target.ID, closestNodes)
-			return closestNodes
-		}
-		network.SendFindContactMessage(target)
+		go network.SendFindContactMessage(kademlia, &closestNodes[i], target)
 	}
 
-	fmt.Printf("Lookup contact of: %s, found: %v.", target.ID, responses)
+	// fmt.Printf("Lookup contact of: %s, found: %v.", target.ID, responses)
 	// var response []Contact
 
 	//fmt.Printf("Closest nodes: ", closestNodes)
 
 	//fmt.Printf("Lookup contact of: %s, found: %s.", target.ID, response)
 
-	return response
+	return closestNodes
 }
 
 func (kademlia *Kademlia) LookupData(hash string) {
