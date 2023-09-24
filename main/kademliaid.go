@@ -7,6 +7,7 @@ import (
 
 // the static number of bytes in a KademliaID
 const IDLength = 20
+const maxValueInInt = 256
 
 // type definition of a KademliaID
 type KademliaID [IDLength]byte
@@ -33,6 +34,40 @@ func NewRandomKademliaID() *KademliaID {
 	return &newKademliaID
 }
 
+// RandomKademliaIDInBucket returns the ID of a node in the range of the specified bucket
+func RandomKademliaIDInBucket(currentId *KademliaID, bucketIndex int) *KademliaID {
+	newKademliaID := NewKademliaID("0000000000000000000000000000000000000000")
+	wholeBytes := (IDLength - 1) - (bucketIndex / 8)
+	leftOverBits := bucketIndex % 8
+
+	newKademliaID[wholeBytes] = 1 << leftOverBits
+	newKademliaID[wholeBytes] |= uint8(rand.Intn(int(newKademliaID[wholeBytes])))
+
+	for i := IDLength - 1; i <= 0; i-- {
+		if i <= wholeBytes {
+			newKademliaID[i] |= currentId[i]
+		} else {
+			newKademliaID[i] = currentId[i] | uint8(rand.Intn(maxValueInInt))
+		}
+	}
+	return newKademliaID
+}
+
+// RandomKademliaIDInBucket
+// func RandomKademliaIDInBucket(currentId *KademliaID, bucketIndex int) *KademliaID {
+// 	randomDistance := KademliaID{}
+// 	for i := 0; i < IDLength; i++ {
+// 		if i < bucketIndex {
+// 			randomDistance[i] = 0
+// 		} else if i == bucketIndex {
+// 			randomDistance[i] = 255
+// 		} else {
+// 			randomDistance[i] = uint8(rand.Intn(256))
+// 		}
+// 	}
+// 	return currentId.Add(&randomDistance)
+// }
+
 // Less returns true if kademliaID < otherKademliaID (bitwise)
 func (kademliaID KademliaID) Less(otherKademliaID *KademliaID) bool {
 	for i := 0; i < IDLength; i++ {
@@ -52,6 +87,21 @@ func (kademliaID KademliaID) Equals(otherKademliaID *KademliaID) bool {
 	}
 	return true
 }
+
+// func (kademliaID KademliaID) Add(otherKademliaID *KademliaID) *KademliaID {
+// 	sumIDs := KademliaID{}
+// 	overflow := byte(0)
+// 	for i := IDLength - 1; i >= 0; i-- {
+// 		sum := kademliaID[i] + otherKademliaID[i]
+// 		if sum > 255 {
+// 			sum = 256 - sum
+// 			// overflow = sum - 255
+// 			// sum = 255
+// 		}
+// 		sumIDs[i] = sum
+// 	}
+// 	return &sumIDs
+// }
 
 // CalcDistance returns a new instance of a KademliaID that is built
 // through a bitwise XOR operation betweeen kademliaID and target
