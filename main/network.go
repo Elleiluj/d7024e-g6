@@ -74,6 +74,10 @@ func (network *Network) handleResponse(data []byte, address *net.UDPAddr, conn *
 		fmt.Println("Error decoding JSON message:", err)
 		return
 	}
+	sender := message.Sender
+	if sender != nil {
+		network.kademlia.RoutingTable.AddContact(*sender)
+	}
 	switch message.Type {
 	case pingMessage:
 		address.Port = port
@@ -95,9 +99,10 @@ func (network *Network) handleResponse(data []byte, address *net.UDPAddr, conn *
 	}
 }
 
-func (network *Network) SendPingMessage(contact *Contact) {
+func (network *Network) SendPingMessage(sender *Contact, contact *Contact) {
 	message := Message{
-		Type: pingMessage,
+		Type:   pingMessage,
+		Sender: sender,
 	}
 	// Serialize message to JSON
 	jsonMessage, err := json.Marshal(message)
@@ -123,7 +128,7 @@ func (network *Network) SendPingMessage(contact *Contact) {
 	fmt.Printf("Sent ping message to %s\n", contact.Address)
 }
 
-func (network *Network) SendFindContactMessage(contact *Contact, target *Contact) ([]Contact, error) {
+func (network *Network) SendFindContactMessage(sender *Contact, contact *Contact, target *Contact) ([]Contact, error) {
 
 	udpAddr, err := net.ResolveUDPAddr("udp", contact.Address)
 	if err != nil {
@@ -138,10 +143,11 @@ func (network *Network) SendFindContactMessage(contact *Contact, target *Contact
 
 	message := Message{
 		Type:          findContactMessage,
+		Sender:        sender,
 		TargetContact: target,
 	}
 
-	fmt.Printf("TEST send!! messagetype: %s, target: %s", message.Type, message.TargetContact.ID)
+	fmt.Printf("TEST send!! messagetype: %s, sender: %s, target: %s", message.Type, sender.ID, message.TargetContact.ID)
 
 	// Serialize the message into JSON
 	messageJSON, err := json.Marshal(message)
@@ -246,6 +252,7 @@ func (network *Network) SendStoreResponse(data []byte) {
 
 type Message struct {
 	Type           string
+	Sender         *Contact
 	Contacts       []Contact
 	TargetContact  *Contact
 	HashedData     []byte

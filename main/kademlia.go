@@ -59,7 +59,7 @@ func (kademlia *Kademlia) LookupContact(target *Contact) []Contact {
 }
 
 func (kademlia *Kademlia) sendAsyncFindContactMsg(contact *Contact, target *Contact, responseChannel chan []Contact, network *Network) {
-	result, err := network.SendFindContactMessage(contact, target)
+	result, err := network.SendFindContactMessage(&kademlia.Me, contact, target)
 	if err != nil {
 		responseChannel <- result
 	} else {
@@ -83,7 +83,10 @@ func (kademlia *Kademlia) JoinNetwork(knownNode *Contact) {
 
 	//
 	//network.SendPingMessage(knownNode)
-	kademlia.LookupContact(&kademlia.Me)
+	contacts := kademlia.LookupContact(&kademlia.Me)
+	for _, contact := range contacts {
+		kademlia.RoutingTable.AddContact(contact)
+	}
 
 	// TODO: refresh k-buckets further away (lookup random node within the k-bucket range)
 

@@ -81,7 +81,7 @@ func (shortList *ShortList) sort() {
 	// Define a custom sorting function based on the distance
 	sort.Slice(shortList.nodes, func(i, j int) bool {
 		// Compare the distances of two contacts
-		return shortList.nodes[i].contact.distance.Less(shortList.nodes[j].contact.distance)
+		return shortList.nodes[i].contact.Distance.Less(shortList.nodes[j].contact.Distance)
 	})
 }
 
