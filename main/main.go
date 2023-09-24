@@ -37,7 +37,9 @@ func main() {
 		fmt.Println("Initializing network with bootstrap node...")
 	}
 
-	Listen(localIPFull)
+	network := &Network{kademlia: &me}
+
+	network.Listen(localIPFull)
 }
 
 // Get preferred outbound ip of this machine

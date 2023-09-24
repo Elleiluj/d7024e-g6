@@ -6,33 +6,65 @@ import (
 	"fmt"
 )
 
-const alpha int = 4
+const alpha int = 3
 
 type Kademlia struct {
-	me           Contact
-	routingTable RoutingTable
+	Me           Contact
+	RoutingTable *RoutingTable
 }
 
 // address is full ip, including port
 func NewKademliaNode(address string) (kademlia Kademlia) {
 	kademliaID := NewKademliaID(CreateHash(address))
 	fmt.Println("My kademlia ID: ", kademliaID)
-	kademlia.me = NewContact(kademliaID, address)
-	kademlia.routingTable = *NewRoutingTable(kademlia.me)
+	kademlia.Me = NewContact(kademliaID, address)
+	kademlia.RoutingTable = NewRoutingTable(kademlia.Me)
 	return kademlia
 }
 
 func (kademlia *Kademlia) LookupContact(target *Contact) []Contact {
-	closestNodes := kademlia.routingTable.FindClosestContacts(target.ID, alpha) // Find K closest nodes
+	// Initialize a shortlist with alpha closest nodes
+	closestNodes := kademlia.RoutingTable.FindClosestContacts(target.ID, alpha)
+	shortlist := NewShortList(closestNodes)
+
+	// Keep track of the closest node seen so far
+	closestNode := closestNodes[0]
+
 	network := &Network{}
-	network.kademlia = kademlia
-	var response []Contact
 
-	//fmt.Printf("Closest nodes: ", closestNodes)
+	for {
+		responseChannel := make(chan []Contact)
+		numAsked := 0
 
-	//fmt.Printf("Lookup contact of: %s, found: %s.", target.ID, response)
+		for i := 0; i < shortlist.getLength() && numAsked < alpha; i++ {
+			if !shortlist.nodes[i].isAsked {
+				go kademlia.sendAsyncFindContactMsg(shortlist.nodes[i].contact, target, responseChannel, network)
+				numAsked++
+				shortlist.addContacts(<-responseChannel)
+				shortlist.dropUnactiveNodes()
+				shortlist.sort()
+			}
 
-	return response
+		}
+
+		if *shortlist.nodes[0].contact == closestNode || shortlist.numOfAskedNodes() >= bucketSize {
+			println("BREAK!!" + kademlia.Me.Address)
+			break
+		}
+
+		closestNode = *shortlist.nodes[0].contact
+
+	}
+	return shortlist.getContacts()
+}
+
+func (kademlia *Kademlia) sendAsyncFindContactMsg(contact *Contact, target *Contact, responseChannel chan []Contact, network *Network) {
+	result, err := network.SendFindContactMessage(contact, target)
+	if err != nil {
+		responseChannel <- result
+	} else {
+		responseChannel <- result
+	}
 }
 
 func (kademlia *Kademlia) LookupData(hash string) {
@@ -45,13 +77,13 @@ func (kademlia *Kademlia) Store(data []byte) {
 
 func (kademlia *Kademlia) JoinNetwork(knownNode *Contact) {
 	fmt.Printf("Joining network through %s...\n", knownNode.String())
-	kademlia.routingTable.AddContact(*knownNode)
+	kademlia.RoutingTable.AddContact(*knownNode)
 
-	network := &Network{}
-	network.kademlia = kademlia
+	//network := &Network{}
 
-	//kademlia.LookupContact(knownNode)
-	network.SendPingMessage(knownNode)
+	//
+	//network.SendPingMessage(knownNode)
+	kademlia.LookupContact(&kademlia.Me)
 
 	// TODO: refresh k-buckets further away (lookup random node within the k-bucket range)
 
