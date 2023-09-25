@@ -80,9 +80,7 @@ func (network *Network) handleResponse(data []byte, address *net.UDPAddr, conn *
 	case findContactMessage:
 		network.SendFindContactResponse(message, address, conn)
 	case findDataMessage:
-		fmt.Println("Find data message!")
-	case findDataResponse:
-		fmt.Println("Find data response!")
+		network.SendFindDataResponse(message, address, conn)
 	case storeMessage:
 		network.SendStoreResponse(message, address, conn)
 	default:
@@ -186,7 +184,7 @@ func (network *Network) SendMessage(receiver *Contact, message Message) (Message
 		return Message{}, err
 	}
 
-	fmt.Printf("Sent message to %s,\n response: %s\n", receiver.Address, jsonMessage)
+	fmt.Printf("Sent message to %s,\n message: %s\n", receiver.Address, jsonMessage)
 
 	// Wait for a response
 	responseBuffer := make([]byte, 6000)
@@ -263,6 +261,7 @@ func (network *Network) SendFindDataResponse(message Message, address *net.UDPAd
 }
 
 func (network *Network) SendStoreResponse(message Message, address *net.UDPAddr, conn *net.UDPConn) {
+
 	network.kademlia.Data[message.DataHashString] = message.HashedData
 	response := Message{
 		Type: storeResponse,
