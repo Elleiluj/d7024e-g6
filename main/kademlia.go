@@ -88,7 +88,7 @@ func (kademlia *Kademlia) JoinNetwork(knownNode *Contact) {
 		kademlia.RoutingTable.AddContact(contact)
 	}
 
-	// TODO: refresh k-buckets further away (lookup random node within the k-bucket range)
+	// refresh k-buckets further away than its closest node (lookup random node within the k-bucket range)
 	kademlia.Refresh(contacts[0])
 }
 
