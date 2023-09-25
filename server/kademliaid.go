@@ -2,6 +2,7 @@ package server
 
 import (
 	"encoding/hex"
+	"fmt"
 	"math/rand"
 )
 
@@ -43,13 +44,15 @@ func RandomKademliaIDInBucket(currentId *KademliaID, bucketIndex int) *KademliaI
 	newKademliaID[wholeBytes] = 1 << leftOverBits
 	newKademliaID[wholeBytes] |= uint8(rand.Intn(int(newKademliaID[wholeBytes])))
 
-	for i := IDLength - 1; i <= 0; i-- {
+	for i := IDLength - 1; i >= 0; i-- {
 		if i <= wholeBytes {
 			newKademliaID[i] |= currentId[i]
 		} else {
 			newKademliaID[i] = currentId[i] | uint8(rand.Intn(maxValueInInt))
 		}
 	}
+	fmt.Printf("Bucket: %v", bucketIndex)
+	fmt.Printf("Distance: %v", currentId.CalcDistance(newKademliaID).String())
 	return newKademliaID
 }
 
