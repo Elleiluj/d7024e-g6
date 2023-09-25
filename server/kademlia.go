@@ -4,6 +4,7 @@ import (
 	"crypto/sha256"
 	"encoding/hex"
 	"fmt"
+	"strconv"
 )
 
 const alpha int = 3
@@ -20,6 +21,7 @@ func NewKademliaNode(address string) (kademlia Kademlia) {
 	fmt.Println("My kademlia ID: ", kademliaID)
 	kademlia.Me = NewContact(kademliaID, address)
 	kademlia.RoutingTable = NewRoutingTable(kademlia.Me)
+	kademlia.Data = make(map[string][]byte)
 	return kademlia
 }
 
@@ -52,7 +54,28 @@ func (kademlia *Kademlia) LookupContact(target *Contact) []Contact {
 		closer than the closest node already seen or the initiating node has accumulated k probed and
 		known to be active contacts." */
 		if *shortlist.nodes[0].contact == closestNode || shortlist.numOfAskedNodes() >= bucketSize {
-			println("BREAK!!" + kademlia.Me.Address)
+
+			// TODO:
+			//If a cycle doesn't find a closer node, if closestNode is unchanged,
+			// then the initiating node sends a FIND_* RPC to each of the k closest nodes that it has not already queried.
+			/*if *shortlist.nodes[0].contact == closestNode {
+				numAsked := 0
+				for i := 0; i < shortlist.getLength() && numAsked < bucketSize; i++ {
+					if !shortlist.nodes[i].isAsked {
+						go kademlia.sendAsyncFindContactMsg(shortlist.nodes[i].contact, target, responseChannel, network)
+						numAsked++
+						shortlist.addContacts(<-responseChannel)
+						shortlist.dropUnactiveNodes()
+						shortlist.sort()
+					}
+
+				}
+
+			}*/
+
+			fmt.Println("BREAK!!" + kademlia.Me.Address)
+			fmt.Println("\n\nShortlist closest: " + shortlist.nodes[0].contact.Address + "\nClosestNode: " + closestNode.Address)
+			fmt.Println("\nNumOfAskedNodes: " + strconv.Itoa(shortlist.numOfAskedNodes()) + "\nBucketSize: " + strconv.Itoa(bucketSize) + "\n\n")
 			break
 		}
 
@@ -111,8 +134,37 @@ func (kademlia *Kademlia) LookupData(hash string) {
 		value = <-valueChannel
 		node = <-nodeChannel
 
+		fmt.Println("\n\nValue: " + string(value) + "\n\n")
+		fmt.Println("\n\nNode: " + string(node.Address) + "\n\n")
+
 		if *shortlist.nodes[0].contact == closestNode || shortlist.numOfAskedNodes() >= bucketSize || value != nil {
-			println("BREAK!!" + kademlia.Me.Address)
+
+			// TODO:
+			//If a cycle doesn't find a closer node, if closestNode is unchanged,
+			// then the initiating node sends a FIND_* RPC to each of the k closest nodes that it has not already queried.
+			/*if *shortlist.nodes[0].contact == closestNode {
+				numAsked := 0
+				shortlist2 := NewShortList(closestNodes)
+				for i := 0; i < shortlist2.getLength() && numAsked < bucketSize; i++ {
+					if !shortlist2.nodes[i].isAsked {
+						go kademlia.sendAsyncFindDataMsg(shortlist2.nodes[i].contact, &target, hash, contactsChannel, valueChannel, nodeChannel, network)
+						numAsked++
+						shortlist2.addContacts(<-contactsChannel)
+						shortlist2.dropUnactiveNodes()
+						shortlist2.sort()
+					}
+
+				}
+
+				value = <-valueChannel
+				node = <-nodeChannel
+
+			}*/
+
+			fmt.Println("BREAK!!" + kademlia.Me.Address)
+			fmt.Println("\n\nShortlist closest: " + shortlist.nodes[0].contact.Address + "\nClosestNode: " + closestNode.Address)
+			fmt.Println("\nNumOfAskedNodes: " + strconv.Itoa(shortlist.numOfAskedNodes()) + "\nBucketSize: " + strconv.Itoa(bucketSize))
+			fmt.Println("\nValue: " + string(value) + "\n\n")
 			break
 		}
 
