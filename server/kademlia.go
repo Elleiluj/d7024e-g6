@@ -218,7 +218,7 @@ func (kademlia *Kademlia) JoinNetwork(knownNode *Contact) {
 		kademlia.RoutingTable.AddContact(contact)
 	}
 
-	// TODO: refresh k-buckets further away (lookup random node within the k-bucket range)
+	// Refresh k-buckets further away than its closest node (lookup random node within the k-bucket range)
 	kademlia.Refresh(contacts[0])
 }
 
@@ -237,7 +237,6 @@ func CreateHash(data string) (hash string) {
 
 	return hash
 }
-
 
 // Refresh looks up random nodes in the range of its incomplete buckets to fill them
 func (kademlia *Kademlia) Refresh(closestContact Contact) {

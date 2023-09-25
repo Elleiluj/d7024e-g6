@@ -46,9 +46,9 @@ func RandomKademliaIDInBucket(currentId *KademliaID, bucketIndex int) *KademliaI
 
 	for i := IDLength - 1; i >= 0; i-- {
 		if i <= wholeBytes {
-			newKademliaID[i] |= currentId[i]
+			newKademliaID[i] ^= currentId[i]
 		} else {
-			newKademliaID[i] = currentId[i] | uint8(rand.Intn(maxValueInInt))
+			newKademliaID[i] = currentId[i] ^ uint8(rand.Intn(maxValueInInt))
 		}
 	}
 	fmt.Printf("Bucket: %v", bucketIndex)
@@ -70,7 +70,6 @@ func RandomKademliaIDInBucket(currentId *KademliaID, bucketIndex int) *KademliaI
 // 	}
 // 	return currentId.Add(&randomDistance)
 // }
-
 
 // Less returns true if kademliaID < otherKademliaID (bitwise)
 func (kademliaID KademliaID) Less(otherKademliaID *KademliaID) bool {
@@ -106,7 +105,6 @@ func (kademliaID KademliaID) Equals(otherKademliaID *KademliaID) bool {
 // 	}
 // 	return &sumIDs
 // }
-
 
 // CalcDistance returns a new instance of a KademliaID that is built
 // through a bitwise XOR operation betweeen kademliaID and target
