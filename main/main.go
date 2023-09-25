@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"kademlia/client"
+	"kademlia/server"
 	"log"
 	"net"
 	"strconv"
@@ -19,7 +21,7 @@ func main() {
 	localIPFull := localIP.String() + ":" + portStr
 	fmt.Println("Full local ip: ", localIPFull)
 
-	me := NewKademliaNode(localIPFull)
+	me := server.NewKademliaNode(localIPFull)
 
 	bootstrapIP := GetBootstrapIP(localIP.String())
 	fmt.Println("bootstrapIP: ", bootstrapIP)
@@ -29,17 +31,20 @@ func main() {
 
 	if localIP.String() != bootstrapIP {
 		fmt.Println("Retrieving bootstrap node...")
-		bootstrapAddress := CreateHash(bootstrapIPFull)
-		bootstrapContact := NewContact(NewKademliaID(bootstrapAddress), bootstrapIPFull)
+		bootstrapAddress := server.CreateHash(bootstrapIPFull)
+		bootstrapContact := server.NewContact(server.NewKademliaID(bootstrapAddress), bootstrapIPFull)
 		fmt.Println("Joining network...")
 		me.JoinNetwork(&bootstrapContact)
 	} else {
 		fmt.Println("Initializing network with bootstrap node...")
 	}
 
-	network := &Network{kademlia: &me}
+	network := server.NewNetwork(&me)
 
-	network.Listen(localIPFull)
+	go network.Listen(localIPFull)
+	client := client.NewClient(&me)
+	client.Start()
+
 }
 
 // Get preferred outbound ip of this machine

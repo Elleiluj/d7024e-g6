@@ -1,3 +1,3 @@
-module com.docker.devenvironments.code/repository
+module kademlia
 
 go 1.19

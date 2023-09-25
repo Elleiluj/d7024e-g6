@@ -1,8 +1,7 @@
-package main
+package server
 
 import (
 	"encoding/json"
-	"errors"
 	"fmt"
 	"net"
 )
@@ -15,12 +14,15 @@ const findDataMessage = "find data"
 const findDataResponse = "find data response"
 const storeMessage = "store"
 const storeResponse = "store response"
-const messageDivider = ";"
 
 const port = 4000
 
 type Network struct {
 	kademlia *Kademlia
+}
+
+func NewNetwork(kademlia *Kademlia) *Network {
+	return &Network{kademlia: kademlia}
 }
 
 // full ip
@@ -55,15 +57,6 @@ func (network *Network) Listen(ip string) {
 		data := buffer[:n]
 		fmt.Printf("Received message from %s: %s\n", addr, string(data))
 
-		// Respond to the client
-		// maybe do in separate function, to simplify testing
-		// depending on what the request was, we want different responses
-		/*response := []byte("Hello from UDP server")
-		addr.Port = port
-		_, err = conn.WriteToUDP(response, addr)
-		if err != nil {
-			fmt.Println("Error sending UDP response:", err)
-		}*/
 		network.handleResponse(data, addr, conn)
 	}
 }
@@ -91,9 +84,7 @@ func (network *Network) handleResponse(data []byte, address *net.UDPAddr, conn *
 	case findDataResponse:
 		fmt.Println("Find data response!")
 	case storeMessage:
-		fmt.Println("Store message!")
-	case storeResponse:
-		fmt.Println("Store response!")
+		network.SendStoreResponse(message, address, conn)
 	default:
 		fmt.Println("Unknown message type:", message.Type)
 	}
@@ -130,68 +121,90 @@ func (network *Network) SendPingMessage(sender *Contact, contact *Contact) {
 
 func (network *Network) SendFindContactMessage(sender *Contact, contact *Contact, target *Contact) ([]Contact, error) {
 
-	udpAddr, err := net.ResolveUDPAddr("udp", contact.Address)
-	if err != nil {
-		fmt.Println("Error resolving address:", err)
-	}
-
-	conn, err := net.DialUDP("udp", nil, udpAddr)
-	if err != nil {
-		return nil, err
-	}
-	defer conn.Close()
-
 	message := Message{
 		Type:          findContactMessage,
 		Sender:        sender,
 		TargetContact: target,
 	}
 
-	fmt.Printf("TEST send!! messagetype: %s, sender: %s, target: %s", message.Type, sender.ID, message.TargetContact.ID)
+	responseMessage, err := network.SendMessage(contact, message)
+
+	return responseMessage.Contacts, err
+}
+
+func (network *Network) SendFindDataMessage(sender *Contact, receiver *Contact, target *Contact, hash string) ([]Contact, []byte, *Contact, error) {
+	message := Message{
+		Type:           findDataMessage,
+		Sender:         sender,
+		TargetContact:  target,
+		DataHashString: hash,
+	}
+
+	responseMessage, err := network.SendMessage(receiver, message)
+
+	return responseMessage.Contacts, responseMessage.HashedData, receiver, err
+}
+
+func (network *Network) SendStoreMessage(sender *Contact, receiver *Contact, data []byte, key string) error {
+	message := Message{
+		Type:           storeMessage,
+		Sender:         sender,
+		HashedData:     data,
+		DataHashString: key,
+	}
+
+	_, err := network.SendMessage(receiver, message)
+
+	fmt.Println("TEEEEEST!!!!!!!!!!!!!!!!!!!")
+
+	return err
+}
+
+func (network *Network) SendMessage(receiver *Contact, message Message) (Message, error) {
+
+	udpAddr, err := net.ResolveUDPAddr("udp", receiver.Address)
+	if err != nil {
+		fmt.Println("Error resolving address:", err)
+	}
+
+	conn, err := net.DialUDP("udp", nil, udpAddr)
+	if err != nil {
+		return Message{}, err
+	}
+	defer conn.Close()
 
 	// Serialize the message into JSON
-	messageJSON, err := json.Marshal(message)
+	jsonMessage, err := json.Marshal(message)
 	if err != nil {
-		return nil, err
+		return Message{}, err
 	}
 
-	fmt.Printf("TEST send json!! marshalled: %s", messageJSON)
+	fmt.Printf("TEST send json!! marshalled: %s", jsonMessage)
 
-	_, err = conn.Write(messageJSON)
+	_, err = conn.Write(jsonMessage)
 	if err != nil {
-		return nil, err
+		return Message{}, err
 	}
 
-	fmt.Printf("Sent find contact message to %s\n", contact.Address)
+	fmt.Printf("Sent message to %s,\n response: %s\n", receiver.Address, jsonMessage)
 
 	// Wait for a response
 	responseBuffer := make([]byte, 6000)
 	n, err := conn.Read(responseBuffer)
 	if err != nil {
-		return nil, err
+		return Message{}, err
 	}
 
 	// Deserialize the response into a Message
 	var responseMessage Message
 	if err := json.Unmarshal(responseBuffer[:n], &responseMessage); err != nil {
-		return nil, err
+		return Message{}, err
 	}
 
-	if responseMessage.Type != findContactResponse {
-		return nil, errors.New("Unexpected response type")
-	}
+	fmt.Printf("Received response: %s\n", string(responseBuffer))
 
-	fmt.Printf("Received find contact response: %s\n", string(responseBuffer))
+	return responseMessage, nil
 
-	return responseMessage.Contacts, nil
-}
-
-func (network *Network) SendFindDataMessage(hash string) {
-	// TODO
-}
-
-func (network *Network) SendStoreMessage(data []byte) {
-	// TODO
 }
 
 func (network *Network) SendPingResponse(address *net.UDPAddr, conn *net.UDPConn) {
@@ -225,6 +238,41 @@ func (network *Network) SendFindContactResponse(message Message, address *net.UD
 		Contacts: closestContacts,
 	}
 
+	network.sendResponse(response, address, conn)
+
+}
+
+func (network *Network) SendFindDataResponse(message Message, address *net.UDPAddr, conn *net.UDPConn) {
+	value := network.kademlia.Data[message.DataHashString]
+	var response Message
+
+	// if no value is found, return k-closest
+	if value == nil {
+		closestContacts := network.kademlia.RoutingTable.FindClosestContacts(message.TargetContact.ID, bucketSize)
+		response = Message{
+			Type:     findDataResponse,
+			Contacts: closestContacts,
+		}
+	} else {
+		response = Message{
+			Type:       findDataResponse,
+			HashedData: value,
+		}
+	}
+	network.sendResponse(response, address, conn)
+}
+
+func (network *Network) SendStoreResponse(message Message, address *net.UDPAddr, conn *net.UDPConn) {
+	network.kademlia.Data[message.DataHashString] = message.HashedData
+	response := Message{
+		Type: storeResponse,
+	}
+
+	network.sendResponse(response, address, conn)
+
+}
+
+func (network *Network) sendResponse(response Message, address *net.UDPAddr, conn *net.UDPConn) {
 	// Serialize response to JSON
 	jsonResponse, err := json.Marshal(response)
 	if err != nil {
@@ -238,16 +286,8 @@ func (network *Network) SendFindContactResponse(message Message, address *net.UD
 		fmt.Println("Error sending UDP response:", err)
 	}
 
-	fmt.Printf("Sent find contact response to %s\n", address.String())
+	fmt.Printf("Sent response to %s,\n response: %s\n", address.String(), jsonResponse)
 
-}
-
-func (network *Network) SendFindDataResponse(hash string) {
-	// TODO
-}
-
-func (network *Network) SendStoreResponse(data []byte) {
-	// TODO
 }
 
 type Message struct {
@@ -255,6 +295,6 @@ type Message struct {
 	Sender         *Contact
 	Contacts       []Contact
 	TargetContact  *Contact
-	HashedData     []byte
-	DataHashString string
+	HashedData     []byte // data to store (value)
+	DataHashString string // data to retrieve (key)
 }
