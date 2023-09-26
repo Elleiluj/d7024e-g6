@@ -30,8 +30,8 @@ services:
 #      - "8080:8080"
 #      - "4000:80"
     networks:
-      - kademlia_network
+      - kademlia_network4
       
 networks:
-  kademlia_network:
+  kademlia_network4:
 
