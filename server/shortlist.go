@@ -29,12 +29,16 @@ func NewShortList(contacts []Contact) ShortList {
 func (shortList *ShortList) addContacts(contacts []Contact) {
 	if contacts != nil {
 		for _, contact := range contacts {
-			//if !shortList.isInShortList(&contact) {
-			shortList.nodes = append(shortList.nodes, ShortListNode{
-				contact: &contact,
-				isAsked: false,
-			})
-			//}
+			// Create a copy of the contact inside the loop
+			copyOfContact := contact
+
+			// Check if the copy of the contact is already in the ShortList
+			if !shortList.isInShortList(&copyOfContact) {
+				shortList.nodes = append(shortList.nodes, ShortListNode{
+					contact: &copyOfContact, // Use the address of the copy
+					isAsked: false,
+				})
+			}
 		}
 	}
 }

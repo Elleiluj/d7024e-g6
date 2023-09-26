@@ -121,6 +121,8 @@ func (kademlia *Kademlia) LookupContact(target *Contact) []Contact {
 			break
 		}
 
+		//time.Sleep(8 * time.Second)
+
 		closestNode = *shortlist.nodes[0].contact
 
 	}
@@ -227,6 +229,8 @@ func (kademlia *Kademlia) LookupData(hash string) {
 		}
 
 		closestNode = *shortlist.nodes[0].contact
+
+		//time.Sleep(8 * time.Second)
 
 	}
 
