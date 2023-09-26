@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net"
+	"time"
 )
 
 const pingMessage = "ping"
@@ -167,6 +168,7 @@ func (network *Network) SendMessage(receiver *Contact, message Message) (Message
 
 	conn, err := net.DialUDP("udp", nil, udpAddr)
 	if err != nil {
+		fmt.Println("\n\n ERROR DIALING!!!!")
 		return Message{}, err
 	}
 	defer conn.Close()
@@ -174,6 +176,7 @@ func (network *Network) SendMessage(receiver *Contact, message Message) (Message
 	// Serialize the message into JSON
 	jsonMessage, err := json.Marshal(message)
 	if err != nil {
+		fmt.Println("\n\n ERROR MARSHAL!!!!")
 		return Message{}, err
 	}
 
@@ -181,21 +184,27 @@ func (network *Network) SendMessage(receiver *Contact, message Message) (Message
 
 	_, err = conn.Write(jsonMessage)
 	if err != nil {
+		fmt.Println("\n\n ERROR WRITING!!!!")
 		return Message{}, err
 	}
 
 	fmt.Printf("Sent message to %s,\n message: %s\n", receiver.Address, jsonMessage)
 
+	timeout := time.Now().Add(5 * time.Second) // Set a 5-second timeout
+	conn.SetDeadline(timeout)
+
 	// Wait for a response
 	responseBuffer := make([]byte, 6000)
 	n, err := conn.Read(responseBuffer)
 	if err != nil {
+		fmt.Println("\n\n ERROR READING!!!!")
 		return Message{}, err
 	}
 
 	// Deserialize the response into a Message
 	var responseMessage Message
 	if err := json.Unmarshal(responseBuffer[:n], &responseMessage); err != nil {
+		fmt.Println("\n\n ERROR UNMARSHAL!!!!")
 		return Message{}, err
 	}
 

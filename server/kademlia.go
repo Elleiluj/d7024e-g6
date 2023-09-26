@@ -35,43 +35,85 @@ func (kademlia *Kademlia) LookupContact(target *Contact) []Contact {
 
 	network := &Network{kademlia: kademlia}
 
+	//var wg sync.WaitGroup
+
 	for {
+
 		responseChannel := make(chan []Contact)
+		//isActive := make(chan bool)
 		numAsked := 0
 
 		for i := 0; i < shortlist.getLength() && numAsked < alpha; i++ {
 			if !shortlist.nodes[i].isAsked {
+				//wg.Add(1)
+
+				/*go func(node ShortListNode) {
+					defer wg.Done() // Decrement the WaitGroup when the query is done
+					kademlia.sendAsyncFindContactMsg(node.contact, target, responseChannel, isActive, network)
+				}(shortlist.nodes[i])*/
 				go kademlia.sendAsyncFindContactMsg(shortlist.nodes[i].contact, target, responseChannel, network)
 				numAsked++
 				shortlist.addContacts(<-responseChannel)
-				shortlist.dropUnactiveNodes()
-				shortlist.sort()
+				fmt.Println(shortlist.getLength())
+				//shortlist.nodes[i].isActive = isActive
+				shortlist.nodes[i].isAsked = true
+
 			}
 
 		}
+
+		//wg.Wait()
+
+		//shortlist.dropUnactiveNodes()
+
+		fmt.Println("\n\nIs asked:")
+		fmt.Println(shortlist.numOfAskedNodes())
+		fmt.Println("\n\nShortlist length:")
+		fmt.Println(shortlist.getLength())
+
+		//shortlist.sort(target)
 
 		/* "The sequence of parallel searches is continued until either no node in the sets returned is
 		closer than the closest node already seen or the initiating node has accumulated k probed and
 		known to be active contacts." */
 		if *shortlist.nodes[0].contact == closestNode || shortlist.numOfAskedNodes() >= bucketSize {
 
-			// TODO:
-			//If a cycle doesn't find a closer node, if closestNode is unchanged,
-			// then the initiating node sends a FIND_* RPC to each of the k closest nodes that it has not already queried.
-			/*if *shortlist.nodes[0].contact == closestNode {
-				numAsked := 0
-				for i := 0; i < shortlist.getLength() && numAsked < bucketSize; i++ {
-					if !shortlist.nodes[i].isAsked {
-						go kademlia.sendAsyncFindContactMsg(shortlist.nodes[i].contact, target, responseChannel, network)
-						numAsked++
-						shortlist.addContacts(<-responseChannel)
-						shortlist.dropUnactiveNodes()
-						shortlist.sort()
-					}
+			fmt.Println("\n\nENTERED BREAK CONDITION CLOSEST NODE!!")
 
+			if *shortlist.nodes[0].contact == closestNode {
+
+				fmt.Println("\n\nUNCHANGED CLOSEST NODE!!")
+
+				// Find the k closest nodes that haven't been queried yet
+				unqueriedNodes := shortlist.findUnqueriedNodes(bucketSize)
+
+				fmt.Println("\n\nUNQUERIED NODES: " + strconv.Itoa(len(unqueriedNodes)))
+
+				// Send FIND_* RPCs to unqueried nodes
+				for _, node := range unqueriedNodes {
+					contact := node.contact
+
+					fmt.Println("\n\nFOR LOOP!")
+
+					// Increment the WaitGroup to track the ongoing query
+					//wg.Add(1)
+
+					/*go func(contact Contact) {
+						defer wg.Done() // Decrement the WaitGroup when the query is done
+						kademlia.sendAsyncFindContactMsg(contact, target, responseChannel, network)
+					}(node)*/
+
+					go kademlia.sendAsyncFindContactMsg(contact, target, responseChannel, network)
+
+					shortlist.addContacts(<-responseChannel)
+					//node.isActive = isActive
+					node.isAsked = true
 				}
 
-			}*/
+				fmt.Println("\n\nFOR LOOP FINISHED!")
+
+				//shortlist.dropUnactiveNodes()
+			}
 
 			fmt.Println("BREAK!!" + kademlia.Me.Address)
 			fmt.Println("\n\nShortlist closest: " + shortlist.nodes[0].contact.Address + "\nClosestNode: " + closestNode.Address)
@@ -82,14 +124,18 @@ func (kademlia *Kademlia) LookupContact(target *Contact) []Contact {
 		closestNode = *shortlist.nodes[0].contact
 
 	}
+	shortlist.sort(target)
 	return shortlist.getContacts()
 }
 
 func (kademlia *Kademlia) sendAsyncFindContactMsg(contact *Contact, target *Contact, responseChannel chan []Contact, network *Network) {
 	result, err := network.SendFindContactMessage(&kademlia.Me, contact, target)
+	fmt.Println("GOT MESSAGE RESPONSE; FUNCTION RETURNED")
 	if err != nil {
+		//isActive <- false
 		responseChannel <- result
 	} else {
+		//isActive <- true
 		responseChannel <- result
 	}
 }
@@ -114,6 +160,7 @@ func (kademlia *Kademlia) LookupData(hash string) {
 		contactsChannel := make(chan []Contact)
 		valueChannel := make(chan []byte)
 		nodeChannel := make(chan *Contact)
+		//isActive := make(chan bool)
 		numAsked := 0
 
 		for i := 0; i < shortlist.getLength() && numAsked < alpha; i++ {
@@ -121,11 +168,12 @@ func (kademlia *Kademlia) LookupData(hash string) {
 				go kademlia.sendAsyncFindDataMsg(shortlist.nodes[i].contact, &target, hash, contactsChannel, valueChannel, nodeChannel, network)
 				numAsked++
 				shortlist.addContacts(<-contactsChannel)
-				shortlist.dropUnactiveNodes()
-				shortlist.sort()
 			}
 
 		}
+
+		//shortlist.dropUnactiveNodes()
+		shortlist.sort(&target)
 
 		/* "The sequence of parallel searches is continued until either no node in the sets returned is
 		closer than the closest node already seen or the initiating node has accumulated k probed and
@@ -142,24 +190,34 @@ func (kademlia *Kademlia) LookupData(hash string) {
 			// TODO:
 			//If a cycle doesn't find a closer node, if closestNode is unchanged,
 			// then the initiating node sends a FIND_* RPC to each of the k closest nodes that it has not already queried.
-			/*if *shortlist.nodes[0].contact == closestNode {
-				numAsked := 0
-				shortlist2 := NewShortList(closestNodes)
-				for i := 0; i < shortlist2.getLength() && numAsked < bucketSize; i++ {
-					if !shortlist2.nodes[i].isAsked {
-						go kademlia.sendAsyncFindDataMsg(shortlist2.nodes[i].contact, &target, hash, contactsChannel, valueChannel, nodeChannel, network)
-						numAsked++
-						shortlist2.addContacts(<-contactsChannel)
-						shortlist2.dropUnactiveNodes()
-						shortlist2.sort()
-					}
 
+			if *shortlist.nodes[0].contact == closestNode {
+
+				fmt.Println("\n\nUNCHANGED CLOSEST NODE!!")
+
+				// Find the k closest nodes that haven't been queried yet
+				unqueriedNodes := shortlist.findUnqueriedNodes(bucketSize)
+
+				fmt.Println("\n\nUNQUERIED NODES: " + strconv.Itoa(len(unqueriedNodes)))
+
+				// Send FIND_* RPCs to unqueried nodes
+				for _, node := range unqueriedNodes {
+					fmt.Println("\n\nFOR LOOP!")
+					contact := node.contact
+					go kademlia.sendAsyncFindDataMsg(contact, &target, hash, contactsChannel, valueChannel, nodeChannel, network)
+					shortlist.addContacts(<-contactsChannel)
+					//node.isActive = isActive
+					node.isAsked = true
 				}
 
-				value = <-valueChannel
-				node = <-nodeChannel
+				fmt.Println("\n\nFOR LOOP FINISHED!")
 
-			}*/
+				//shortlist.dropUnactiveNodes()
+				shortlist.sort(&target)
+			}
+
+			value = <-valueChannel
+			node = <-nodeChannel
 
 			fmt.Println("BREAK!!" + kademlia.Me.Address)
 			fmt.Println("\n\nShortlist closest: " + shortlist.nodes[0].contact.Address + "\nClosestNode: " + closestNode.Address)
@@ -179,10 +237,12 @@ func (kademlia *Kademlia) LookupData(hash string) {
 func (kademlia *Kademlia) sendAsyncFindDataMsg(contact *Contact, target *Contact, hash string, contactsChannel chan []Contact, valueChannel chan []byte, nodeChannel chan *Contact, network *Network) {
 	contacts, value, node, err := network.SendFindDataMessage(&kademlia.Me, contact, target, hash)
 	if err != nil {
+		//isActive <- false
 		contactsChannel <- contacts
 		valueChannel <- value
 		nodeChannel <- node
 	} else {
+		//isActive <- true
 		contactsChannel <- contacts
 		valueChannel <- value
 		nodeChannel <- node

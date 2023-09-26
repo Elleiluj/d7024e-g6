@@ -1,11 +1,13 @@
 package server
 
-import "sort"
+import (
+	"sort"
+)
 
 type ShortListNode struct {
-	contact  *Contact
-	isActive bool
-	isAsked  bool
+	contact *Contact
+	//isActive chan bool
+	isAsked bool
 }
 
 type ShortList struct {
@@ -16,9 +18,9 @@ func NewShortList(contacts []Contact) ShortList {
 	var shortlist ShortList
 	for _, contact := range contacts {
 		shortlist.nodes = append(shortlist.nodes, ShortListNode{
-			contact:  &contact,
-			isActive: false,
-			isAsked:  false,
+			contact: &contact,
+			//isActive: make(chan bool),
+			isAsked: false,
 		})
 	}
 	return shortlist
@@ -27,35 +29,35 @@ func NewShortList(contacts []Contact) ShortList {
 func (shortList *ShortList) addContacts(contacts []Contact) {
 	if contacts != nil {
 		for _, contact := range contacts {
-			if !shortList.isInShortList(&contact) {
-				shortList.nodes = append(shortList.nodes, ShortListNode{
-					contact:  &contact,
-					isActive: false,
-					isAsked:  false,
-				})
-			}
+			//if !shortList.isInShortList(&contact) {
+			shortList.nodes = append(shortList.nodes, ShortListNode{
+				contact: &contact,
+				isAsked: false,
+			})
+			//}
 		}
 	}
 }
 
-func (shortList *ShortList) dropUnactiveNodes() {
+/*func (shortList *ShortList) dropUnactiveNodes() {
 	var updatedNodes []ShortListNode
 
 	for _, n := range shortList.nodes {
-		if n.isActive || !n.isAsked {
+		if <-n.isActive || !n.isAsked {
 			// Keep active nodes, append them to the updatedNodes slice
 			updatedNodes = append(updatedNodes, n)
 		}
 	}
 
 	shortList.nodes = updatedNodes
-}
+
+	fmt.Println("\n\nLENGTH AFTER DROPPING: " + strconv.Itoa(shortList.getLength()))
+}*/
 
 func (shortList *ShortList) addContact(contact Contact) {
 	shortList.nodes = append(shortList.nodes, ShortListNode{
-		contact:  &contact,
-		isActive: false,
-		isAsked:  false,
+		contact: &contact,
+		isAsked: false,
 	})
 }
 
@@ -77,11 +79,25 @@ func (shortList *ShortList) getAlphaNodes(alpha int) []ShortListNode {
 	return alphaNodes
 }
 
-func (shortList *ShortList) sort() {
+/*func (shortList *ShortList) sort(target *Contact) {
 	// Define a custom sorting function based on the distance
 	sort.Slice(shortList.nodes, func(i, j int) bool {
 		// Compare the distances of two contacts
 		return shortList.nodes[i].contact.Distance.Less(shortList.nodes[j].contact.Distance)
+	})
+}*/
+
+func (shortList *ShortList) sort(target *Contact) {
+	// Define a custom sorting function based on the distance
+	sort.Slice(shortList.nodes, func(i, j int) bool {
+		// Compare the distances of two contacts to the target
+		contact1 := shortList.nodes[i].contact
+		contact1.CalcDistance(target.ID)
+		distance1 := contact1.Distance
+		contact2 := shortList.nodes[j].contact
+		contact2.CalcDistance(target.ID)
+		distance2 := contact2.Distance
+		return distance1.Less(distance2)
 	})
 }
 
@@ -93,6 +109,17 @@ func (shortList *ShortList) getContacts() []Contact {
 	}
 
 	return contacts
+}
+
+func (shortList *ShortList) findUnqueriedNodes(k int) []ShortListNode {
+	var unqueriedNodes []ShortListNode
+	for i := 0; i < k && i < shortList.getLength(); i++ {
+		node := shortList.nodes[i]
+		if !node.isAsked {
+			unqueriedNodes = append(unqueriedNodes, node)
+		}
+	}
+	return unqueriedNodes
 }
 
 func (shortList *ShortList) numOfAskedNodes() int {
