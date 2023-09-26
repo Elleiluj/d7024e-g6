@@ -1,9 +1,9 @@
 package server
 
-import (
-	"fmt"
-	"testing"
-)
+// import (
+// 	"fmt"
+// 	"testing"
+// )
 
 // func TestCalcDistance(t *testing.T) {
 // 	id := NewKademliaID()
