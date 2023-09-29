@@ -2,6 +2,7 @@ package server
 
 import (
 	"sort"
+	"sync"
 )
 
 type ShortListNode struct {
@@ -12,10 +13,11 @@ type ShortListNode struct {
 
 type ShortList struct {
 	nodes []ShortListNode
+	mu    sync.Mutex
 }
 
-func NewShortList(contacts []Contact) ShortList {
-	var shortlist ShortList
+func NewShortList(contacts []Contact) *ShortList {
+	shortlist := &ShortList{mu: sync.Mutex{}}
 	for _, contact := range contacts {
 		shortlist.nodes = append(shortlist.nodes, ShortListNode{
 			contact: &contact,
@@ -27,6 +29,8 @@ func NewShortList(contacts []Contact) ShortList {
 }
 
 func (shortList *ShortList) addContacts(contacts []Contact) {
+	shortList.mu.Lock()
+	defer shortList.mu.Unlock()
 	if contacts != nil {
 		for _, contact := range contacts {
 			// Create a copy of the contact inside the loop
@@ -39,6 +43,18 @@ func (shortList *ShortList) addContacts(contacts []Contact) {
 					isAsked: false,
 				})
 			}
+		}
+	}
+}
+
+func (shortList *ShortList) dropNode(contact *Contact) {
+	shortList.mu.Lock()
+	defer shortList.mu.Unlock()
+
+	for i, node := range shortList.nodes {
+		if *node.contact.ID == *contact.ID {
+			shortList.nodes = append(shortList.nodes[:i], shortList.nodes[i+1:]...)
+			return
 		}
 	}
 }
@@ -59,6 +75,8 @@ func (shortList *ShortList) addContacts(contacts []Contact) {
 }*/
 
 func (shortList *ShortList) addContact(contact Contact) {
+	shortList.mu.Lock()
+	defer shortList.mu.Unlock()
 	shortList.nodes = append(shortList.nodes, ShortListNode{
 		contact: &contact,
 		isAsked: false,

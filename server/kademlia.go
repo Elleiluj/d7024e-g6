@@ -39,11 +39,14 @@ func (kademlia *Kademlia) LookupContact(target *Contact) []Contact {
 
 	for {
 
+		fmt.Println("\n\nNEW FOR LOOP LAP")
+
 		responseChannel := make(chan []Contact)
-		//isActive := make(chan bool)
+		var inactiveNode chan *Contact
 		numAsked := 0
 
 		for i := 0; i < shortlist.getLength() && numAsked < alpha; i++ {
+			fmt.Println("\n\nINNER FOR LOOP NEW LAP")
 			if !shortlist.nodes[i].isAsked {
 				//wg.Add(1)
 
@@ -51,9 +54,16 @@ func (kademlia *Kademlia) LookupContact(target *Contact) []Contact {
 					defer wg.Done() // Decrement the WaitGroup when the query is done
 					kademlia.sendAsyncFindContactMsg(node.contact, target, responseChannel, isActive, network)
 				}(shortlist.nodes[i])*/
-				go kademlia.sendAsyncFindContactMsg(shortlist.nodes[i].contact, target, responseChannel, network)
+				go kademlia.sendAsyncFindContactMsg(shortlist.nodes[i].contact, target, responseChannel, inactiveNode, network)
 				numAsked++
+				fmt.Println("\n\nADDING CONTACTS")
 				shortlist.addContacts(<-responseChannel)
+				fmt.Println("\n\nCHECKING INACTIVE")
+				if inactiveNode != nil {
+					fmt.Println("\n\nIS INACTIVE")
+					fmt.Println("\n\nDropping contact: " + shortlist.nodes[i].contact.Address)
+					shortlist.dropNode(shortlist.nodes[i].contact)
+				}
 				fmt.Println(shortlist.getLength())
 				//shortlist.nodes[i].isActive = isActive
 				shortlist.nodes[i].isAsked = true
@@ -103,9 +113,15 @@ func (kademlia *Kademlia) LookupContact(target *Contact) []Contact {
 						kademlia.sendAsyncFindContactMsg(contact, target, responseChannel, network)
 					}(node)*/
 
-					go kademlia.sendAsyncFindContactMsg(contact, target, responseChannel, network)
+					go kademlia.sendAsyncFindContactMsg(contact, target, responseChannel, inactiveNode, network)
 
 					shortlist.addContacts(<-responseChannel)
+					fmt.Println("\n\nCHECKING INACTIVE")
+					if inactiveNode != nil {
+						fmt.Println("\n\nIS INACTIVE")
+						fmt.Println("\n\nDropping contact: " + node.contact.Address)
+						shortlist.dropNode(node.contact)
+					}
 					//node.isActive = isActive
 					node.isAsked = true
 				}
@@ -121,7 +137,7 @@ func (kademlia *Kademlia) LookupContact(target *Contact) []Contact {
 			break
 		}
 
-		//time.Sleep(8 * time.Second)
+		//time.Sleep(4 * time.Second)
 
 		closestNode = *shortlist.nodes[0].contact
 
@@ -130,16 +146,19 @@ func (kademlia *Kademlia) LookupContact(target *Contact) []Contact {
 	return shortlist.getContacts()
 }
 
-func (kademlia *Kademlia) sendAsyncFindContactMsg(contact *Contact, target *Contact, responseChannel chan []Contact, network *Network) {
+func (kademlia *Kademlia) sendAsyncFindContactMsg(contact *Contact, target *Contact, responseChannel chan []Contact, inactiveNode chan *Contact, network *Network) {
 	result, err := network.SendFindContactMessage(&kademlia.Me, contact, target)
-	fmt.Println("GOT MESSAGE RESPONSE; FUNCTION RETURNED")
 	if err != nil {
-		//isActive <- false
+		fmt.Println("ERROR sendAsyncFindContact")
 		responseChannel <- result
+		fmt.Println("\n\nWROTE TO RESPONSE CHANNEL")
+		inactiveNode <- contact
+		fmt.Println("\n\nWROTE TO INACTIVE NODE")
 	} else {
-		//isActive <- true
+		fmt.Println("NO error sendAsyncFindContact")
 		responseChannel <- result
 	}
+	fmt.Println("GOT MESSAGE RESPONSE; FUNCTION RETURNED")
 }
 
 func (kademlia *Kademlia) LookupData(hash string) {
@@ -162,15 +181,25 @@ func (kademlia *Kademlia) LookupData(hash string) {
 		contactsChannel := make(chan []Contact)
 		valueChannel := make(chan []byte)
 		nodeChannel := make(chan *Contact)
+		var inactiveNode chan *Contact
 		//isActive := make(chan bool)
 		numAsked := 0
 
 		for i := 0; i < shortlist.getLength() && numAsked < alpha; i++ {
 			if !shortlist.nodes[i].isAsked {
-				go kademlia.sendAsyncFindDataMsg(shortlist.nodes[i].contact, &target, hash, contactsChannel, valueChannel, nodeChannel, network)
+				go kademlia.sendAsyncFindDataMsg(shortlist.nodes[i].contact, &target, hash, contactsChannel, valueChannel, nodeChannel, inactiveNode, network)
 				numAsked++
 				shortlist.addContacts(<-contactsChannel)
+				fmt.Println("\n\nCHECKING INACTIVE")
+				if inactiveNode != nil {
+					fmt.Println("\n\nIS INACTIVE")
+					fmt.Println("\n\nDropping contact: " + shortlist.nodes[i].contact.Address)
+					shortlist.dropNode(shortlist.nodes[i].contact)
+				}
+				shortlist.nodes[i].isAsked = true
 			}
+			fmt.Print("\n\nIS ASKED: ")
+			fmt.Println(shortlist.nodes[i].isAsked)
 
 		}
 
@@ -187,7 +216,10 @@ func (kademlia *Kademlia) LookupData(hash string) {
 		fmt.Println("\n\nValue: " + string(value) + "\n\n")
 		fmt.Println("\n\nNode: " + string(node.Address) + "\n\n")
 
-		if *shortlist.nodes[0].contact == closestNode || shortlist.numOfAskedNodes() >= bucketSize || value != nil {
+		fmt.Print("\n\nNUM OF ASKED: ")
+		fmt.Println(shortlist.numOfAskedNodes())
+
+		if shortlist.nodes[0].contact.ID == closestNode.ID || shortlist.numOfAskedNodes() >= bucketSize || value != nil {
 
 			// TODO:
 			//If a cycle doesn't find a closer node, if closestNode is unchanged,
@@ -206,9 +238,14 @@ func (kademlia *Kademlia) LookupData(hash string) {
 				for _, node := range unqueriedNodes {
 					fmt.Println("\n\nFOR LOOP!")
 					contact := node.contact
-					go kademlia.sendAsyncFindDataMsg(contact, &target, hash, contactsChannel, valueChannel, nodeChannel, network)
+					go kademlia.sendAsyncFindDataMsg(contact, &target, hash, contactsChannel, valueChannel, nodeChannel, inactiveNode, network)
 					shortlist.addContacts(<-contactsChannel)
-					//node.isActive = isActive
+					fmt.Println("\n\nCHECKING INACTIVE")
+					if inactiveNode != nil {
+						fmt.Println("\n\nIS INACTIVE")
+						fmt.Println("\n\nDropping contact: " + node.contact.Address)
+						shortlist.dropNode(node.contact)
+					}
 					node.isAsked = true
 				}
 
@@ -230,23 +267,32 @@ func (kademlia *Kademlia) LookupData(hash string) {
 
 		closestNode = *shortlist.nodes[0].contact
 
-		//time.Sleep(8 * time.Second)
+		//time.Sleep(4 * time.Second)
 
 	}
 
-	fmt.Printf("\nRetrieved value: %s, from node: %s\n", value, node.Address)
+	var str string
+
+	if value == nil {
+		str = "\nNo value found with hash: " + hash + "\n"
+	} else {
+		str = "\nRetrieved value: " + string(value) + ", from node: " + node.Address + "\n"
+	}
+
+	fmt.Println(str)
+
+	//fmt.Printf("\nRetrieved value: %s, from node: %s\n", value, node.Address)
 
 }
 
-func (kademlia *Kademlia) sendAsyncFindDataMsg(contact *Contact, target *Contact, hash string, contactsChannel chan []Contact, valueChannel chan []byte, nodeChannel chan *Contact, network *Network) {
+func (kademlia *Kademlia) sendAsyncFindDataMsg(contact *Contact, target *Contact, hash string, contactsChannel chan []Contact, valueChannel chan []byte, nodeChannel chan *Contact, inactiveNode chan *Contact, network *Network) {
 	contacts, value, node, err := network.SendFindDataMessage(&kademlia.Me, contact, target, hash)
 	if err != nil {
-		//isActive <- false
 		contactsChannel <- contacts
+		inactiveNode <- contact
 		valueChannel <- value
 		nodeChannel <- node
 	} else {
-		//isActive <- true
 		contactsChannel <- contacts
 		valueChannel <- value
 		nodeChannel <- node
