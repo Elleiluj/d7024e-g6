@@ -158,9 +158,10 @@ func (shortList *ShortList) getLength() int {
 	return len(shortList.nodes)
 }
 
+// added string() so that true is returend when same
 func (shortList *ShortList) isInShortList(contact *Contact) bool {
 	for _, node := range shortList.nodes {
-		if node.contact != nil && node.contact == contact {
+		if node.contact != nil && node.contact.String() == contact.String() {
 			return true
 		}
 	}
