@@ -118,63 +118,68 @@ func TestSwap(t *testing.T) {
 }
 
 // sorting test for contact ContactCandidates
-// func TestSort_contact(t *testing.T) {
-// 	contact_1 := NewContact(NewKademliaID("00000000000000000000000000000000FFFFFFFF"), "localhost:8000")
-// 	contact_2 := NewContact(NewKademliaID("000000000000000000000000FFFFFFFF00000000"), "localhost:8000")
-// 	contact_3 := NewContact(NewKademliaID("0000000000000000FFFFFFFF0000000000000000"), "localhost:8000")
+func TestSort_contact(t *testing.T) {
+	targetId := NewKademliaID("0000000000000000000000000000FFFFFFFFFFFF")
+	contact_1 := NewContact(NewKademliaID("00000000000000000000000000000000FFFFFFFF"), "")
+	contact_2 := NewContact(NewKademliaID("000000000000000000000000000000FFFFFFFFFF"), "")
+	contact_3 := NewContact(NewKademliaID("0000000000000000000000000000000FFFFFFFFF"), "")
 
-// 	var candidates_sorted ContactCandidates
-// 	contacts_sorted := []Contact{contact_1, contact_2, contact_3}
-// 	candidates_sorted.Append(contacts_sorted)
+	contact_1.CalcDistance(targetId) // TODO: should probably mock
+	contact_2.CalcDistance(targetId) // TODO: should probably mock
+	contact_3.CalcDistance(targetId) // TODO: should probably mock
 
-// 	var candidates_unsorted ContactCandidates
-// 	contacts_unsorted := []Contact{contact_1, contact_3, contact_2}
-// 	candidates_unsorted.Append(contacts_unsorted)
+	var candidates ContactCandidates
+	candidates.Append([]Contact{contact_1, contact_2, contact_3})
 
-// 	candidates_unsorted.Sort() // <- Creates an error
+	candidates.Sort()
 
-// 	got := candidates_unsorted.GetContacts(2)[0]
-// 	want := candidates_sorted.GetContacts(2)[0]
+	got := candidates.contacts[1]
+	want := contact_3
 
-// 	if got != want {
-// 		t.Errorf("got %s want %s", got, want)
-// 	} else {
-// 		fmt.Print("Sort \t\tPASS\n")
-// 	}
-// }
+	if got != want {
+		t.Errorf("got %s want %s", got, want)
+	} else {
+		fmt.Print("PASS")
+	}
+}
 
 // Less for contact
-// func TestLess_con_T(t *testing.T) {
-// 	contact_max := NewContact(NewKademliaID("000000000000000000000000FFFFFFFF00000000"), "localhost:8000")
-// 	contact_min := NewContact(NewKademliaID("00000000000000000000000000000000FFFFFFFF"), "localhost:8000")
+func TestLess_con_T(t *testing.T) {
+	targetId := NewKademliaID("0000000000000000000000000000FFFFFFFFFFFF")
+	contact1 := NewContact(NewKademliaID("00000000000000000000000000000000FFFFFFFF"), "")
+	contact2 := NewContact(NewKademliaID("000000000000000000000000000000FFFFFFFFFF"), "")
 
-// 	got := contact_max.Less(&contact_min)
-// 	want := true
+	contact1.CalcDistance(targetId) // TODO: should probably mock
+	contact2.CalcDistance(targetId) // TODO: should probably mock
 
-// 	if got != want {
-// 		t.Errorf("got %t want %t", got, want)
-// 	} else {
-// 		fmt.Print("PASS")
-// 	}
-// }
+	got := contact1.Less(&contact2)
+	want := false
+
+	if got != want {
+		t.Errorf("got %t want %t", got, want)
+	} else {
+		fmt.Print("PASS")
+	}
+}
 
 // Less for Candidates
-// func TestLess_can_T(t *testing.T) {
-// 	contact_1 := NewContact(NewKademliaID("00000000000000000000000000000000FFFFFFFF"), "localhost:8000")
-// 	contact_2 := NewContact(NewKademliaID("000000000000000000000000FFFFFFFF00000000"), "localhost:8000")
+func TestLess_can_T(t *testing.T) {
+	targetId := NewKademliaID("0000000000000000000000000000FFFFFFFFFFFF")
+	contact_1 := NewContact(NewKademliaID("00000000000000000000000000000000FFFFFFFF"), "")
+	contact_2 := NewContact(NewKademliaID("000000000000000000000000000000FFFFFFFFFF"), "")
 
-// 	var candidates ContactCandidates
-// 	contacts := []Contact{contact_1, contact_2}
-// 	candidates.Append(contacts)
+	contact_1.CalcDistance(targetId) // TODO: should probably mock
+	contact_2.CalcDistance(targetId) // TODO: should probably mock
 
-// 	got := candidates.Less(0, 1)
-// 	want := true
+	var candidates ContactCandidates
+	candidates.Append([]Contact{contact_1, contact_2})
 
-// 	print("Hello?")
+	got := candidates.Less(1, 0)
+	want := true
 
-// 	if got != want {
-// 		t.Errorf("got %t want %t", got, want)
-// 	} else {
-// 		fmt.Print("PASS")
-// 	}
-// }
+	if got != want {
+		t.Errorf("got %t want %t", got, want)
+	} else {
+		fmt.Print("PASS")
+	}
+}
