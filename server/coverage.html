@@ -63,9 +63,9 @@
 				
 				<option value="file3">kademlia/server/kademlia.go (7.7%)</option>
 				
-				<option value="file4">kademlia/server/kademliaid.go (50.0%)</option>
+				<option value="file4">kademlia/server/kademliaid.go (94.1%)</option>
 				
-				<option value="file5">kademlia/server/network.go (86.3%)</option>
+				<option value="file5">kademlia/server/network.go (87.9%)</option>
 				
 				<option value="file6">kademlia/server/routingtable.go (100.0%)</option>
 				
@@ -604,16 +604,16 @@ func NewKademliaID(data string) *KademliaID <span class="cov8" title="1">{
 
 // NewRandomKademliaID returns a new instance of a random KademliaID,
 // change this to a better version if you like
-func NewRandomKademliaID() *KademliaID <span class="cov0" title="0">{
+func NewRandomKademliaID() *KademliaID <span class="cov8" title="1">{
         newKademliaID := KademliaID{}
-        for i := 0; i &lt; IDLength; i++ </span><span class="cov0" title="0">{
+        for i := 0; i &lt; IDLength; i++ </span><span class="cov8" title="1">{
                 newKademliaID[i] = uint8(rand.Intn(256))
         }</span>
-        <span class="cov0" title="0">return &amp;newKademliaID</span>
+        <span class="cov8" title="1">return &amp;newKademliaID</span>
 }
 
 // RandomKademliaIDInBucket returns the ID of a node in the range of the specified bucket
-func RandomKademliaIDInBucket(currentId *KademliaID, bucketIndex int) *KademliaID <span class="cov0" title="0">{
+func RandomKademliaIDInBucket(currentId *KademliaID, bucketIndex int) *KademliaID <span class="cov8" title="1">{
         newKademliaID := NewKademliaID("0000000000000000000000000000000000000000")
         wholeBytes := (IDLength - 1) - (bucketIndex / 8)
         leftOverBits := bucketIndex % 8
@@ -621,14 +621,14 @@ func RandomKademliaIDInBucket(currentId *KademliaID, bucketIndex int) *KademliaI
         newKademliaID[wholeBytes] = 1 &lt;&lt; leftOverBits
         newKademliaID[wholeBytes] |= uint8(rand.Intn(int(newKademliaID[wholeBytes])))
 
-        for i := IDLength - 1; i &gt;= 0; i-- </span><span class="cov0" title="0">{
-                if i &lt;= wholeBytes </span><span class="cov0" title="0">{
+        for i := IDLength - 1; i &gt;= 0; i-- </span><span class="cov8" title="1">{
+                if i &lt;= wholeBytes </span><span class="cov8" title="1">{
                         newKademliaID[i] ^= currentId[i]
                 }</span> else<span class="cov0" title="0"> {
                         newKademliaID[i] = currentId[i] ^ uint8(rand.Intn(maxValueInInt))
                 }</span>
         }
-        <span class="cov0" title="0">fmt.Printf("Bucket: %v", bucketIndex)
+        <span class="cov8" title="1">fmt.Printf("Bucket: %v", bucketIndex)
         fmt.Printf("Distance: %v", currentId.CalcDistance(newKademliaID).String())
         return newKademliaID</span>
 }
@@ -758,7 +758,7 @@ func (network *Network) Listen(ip string) <span class="cov8" title="1">{
                 }
 
                 // Process received data
-                <span class="cov0" title="0">data := buffer[:n]
+                <span class="cov8" title="1">data := buffer[:n]
                 //fmt.Printf("Received message from %s: %s\n", addr, string(data))
 
                 network.handleResponse(data, addr, conn)</span>

@@ -97,3 +97,68 @@ func TestEquals_false(t *testing.T) {
 		fmt.Println("Equals_F \tPASS")
 	}
 }
+
+func TestNewRandomKademliaID(t *testing.T) {
+	fail := false
+	newKademliaID := NewRandomKademliaID()
+	if len(newKademliaID) != IDLength {
+		fail = true
+		t.Errorf("Expected Kademlia ID length of %d, but got %d", IDLength, len(newKademliaID))
+	}
+	for i, b := range newKademliaID {
+		if b < 0 || b > 255 {
+			fail = true
+			t.Errorf("Byte at index %d is out of valid range: %d", i, b)
+		}
+	}
+	if !fail {
+		fmt.Println("NewRandomKademliaID \tPASS")
+	}
+
+}
+
+func TestRandomKademliaIDInBucket(t *testing.T) {
+	currentId := NewRandomKademliaID()
+	bucketIndex := 5 // example bucket index
+
+	minID, maxID := BucketRange(bucketIndex, currentId)
+
+	newKademliaID := RandomKademliaIDInBucket(currentId, bucketIndex)
+
+	distance := currentId.CalcDistance(newKademliaID)
+
+	minDis := currentId.CalcDistance(minID)
+	maxDis := currentId.CalcDistance(maxID)
+
+	// Check if the distance is within the valid range for the specified bucket
+	if distance.Less(minDis) || maxDis.Less(distance) {
+		t.Errorf("Generated Kademlia ID is not within the specified bucket range")
+	} else {
+		fmt.Println("RandomKademliaIDInBucket \tPASS")
+	}
+}
+
+func BucketRange(bucketIndex int, currentID *KademliaID) (minID, maxID *KademliaID) {
+	minID = NewKademliaID("0000000000000000000000000000000000000000")
+	maxID = NewKademliaID("0000000000000000000000000000000000000000")
+
+	wholeBytes := (IDLength - 1) - (bucketIndex / 8)
+	leftOverBits := uint(bucketIndex % 8)
+
+	// Set the minimum ID
+	minID[wholeBytes] = 1 << leftOverBits
+
+	// Set the maximum ID
+	for i := wholeBytes; i < IDLength; i++ {
+		maxID[i] = 0xFF
+	}
+	maxID[wholeBytes] ^= (1 << leftOverBits) - 1
+
+	// XOR the IDs with the current ID
+	for i := 0; i < IDLength; i++ {
+		minID[i] ^= currentID[i]
+		maxID[i] ^= currentID[i]
+	}
+
+	return minID, maxID
+}
