@@ -30,6 +30,7 @@ RUN go mod download
 COPY main/*.go ./main/
 COPY server/*.go ./server/
 COPY client/*.go ./client/
+COPY router/*.go ./router/
 
 # Build
 RUN go build -o /kademlialab ./main

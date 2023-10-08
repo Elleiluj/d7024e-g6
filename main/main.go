@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"kademlia/client"
+	"kademlia/router"
 	"kademlia/server"
 	"log"
 	"net"
@@ -42,6 +43,15 @@ func main() {
 	network := server.NewNetwork(&me)
 
 	go network.Listen(localIPFull)
+	go me.RemoveExpiredData()
+	go me.RefreshUploadedData()
+
+	// RESTful
+	router := router.NewRouter(&me)
+	router.DefineHandleFunc()
+	go router.StartHTTP()
+
+	// CLI
 	client := client.NewClient(&me)
 	client.Start()
 

@@ -21,6 +21,7 @@ services:
 #           limits:
 #              cpus: "0.1"
 #              memory: 50M
+
       restart_policy:
         condition: on-failure
         delay: 5s
@@ -29,6 +30,8 @@ services:
 #    ports:
 #      - "8080:8080"
 #      - "4000:80"
+    ports:
+      - "8080-8130:8080"
     networks:
       - kademlia_network4
       

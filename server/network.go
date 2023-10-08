@@ -15,6 +15,8 @@ const findDataMessage = "find data"
 const findDataResponse = "find data response"
 const storeMessage = "store"
 const storeResponse = "store response"
+const resetTTLMessage = "resetTTL"
+const resetTTLeResponse = "resetTTL response"
 
 const port = 4000
 
@@ -56,7 +58,7 @@ func (network *Network) Listen(ip string) {
 
 		// Process received data
 		data := buffer[:n]
-		fmt.Printf("Received message from %s: %s\n", addr, string(data))
+		//fmt.Printf("Received message from %s: %s\n", addr, string(data))
 
 		network.handleResponse(data, addr, conn)
 	}
@@ -84,6 +86,8 @@ func (network *Network) handleResponse(data []byte, address *net.UDPAddr, conn *
 		network.SendFindDataResponse(message, address, conn)
 	case storeMessage:
 		network.SendStoreResponse(message, address, conn)
+	case resetTTLMessage:
+		network.SendResetTTLResponse(message, address, conn)
 	default:
 		fmt.Println("Unknown message type:", message.Type)
 	}
@@ -154,7 +158,17 @@ func (network *Network) SendStoreMessage(sender *Contact, receiver *Contact, dat
 
 	_, err := network.SendMessage(receiver, message)
 
-	fmt.Println("TEEEEEST!!!!!!!!!!!!!!!!!!!")
+	return err
+}
+
+func (network *Network) SendResetTTLMessage(sender *Contact, receiver *Contact, key string) error {
+	message := Message{
+		Type:           resetTTLMessage,
+		Sender:         sender,
+		DataHashString: key,
+	}
+
+	_, err := network.SendMessage(receiver, message)
 
 	return err
 }
@@ -180,15 +194,13 @@ func (network *Network) SendMessage(receiver *Contact, message Message) (Message
 		return Message{}, err
 	}
 
-	fmt.Printf("TEST send json!! marshalled: %s", jsonMessage)
-
 	_, err = conn.Write(jsonMessage)
 	if err != nil {
 		fmt.Println("\n\n ERROR WRITING!!!!")
 		return Message{}, err
 	}
 
-	fmt.Printf("Sent message to %s,\n message: %s\n", receiver.Address, jsonMessage)
+	//fmt.Printf("Sent message to %s,\n message: %s\n", receiver.Address, jsonMessage)
 
 	timeout := time.Now().Add(5 * time.Second) // Set a 5-second timeout
 	conn.SetDeadline(timeout)
@@ -208,7 +220,7 @@ func (network *Network) SendMessage(receiver *Contact, message Message) (Message
 		return Message{}, err
 	}
 
-	fmt.Printf("Received response: %s\n", string(responseBuffer))
+	//fmt.Printf("Received response: %s\n", string(responseBuffer))
 
 	return responseMessage, nil
 
@@ -237,8 +249,6 @@ func (network *Network) SendPingResponse(address *net.UDPAddr, conn *net.UDPConn
 
 func (network *Network) SendFindContactResponse(message Message, address *net.UDPAddr, conn *net.UDPConn) {
 
-	fmt.Printf("TEST response!! messagetype: %s, target: %s", message.Type, message.TargetContact.ID)
-
 	closestContacts := network.kademlia.RoutingTable.FindClosestContacts(message.TargetContact.ID, bucketSize)
 	response := Message{
 		Type:     findContactResponse,
@@ -250,7 +260,7 @@ func (network *Network) SendFindContactResponse(message Message, address *net.UD
 }
 
 func (network *Network) SendFindDataResponse(message Message, address *net.UDPAddr, conn *net.UDPConn) {
-	value := network.kademlia.Data[message.DataHashString]
+	value := network.kademlia.Datastore.getData(message.DataHashString)
 	var response Message
 
 	// if no value is found, return k-closest
@@ -270,10 +280,20 @@ func (network *Network) SendFindDataResponse(message Message, address *net.UDPAd
 }
 
 func (network *Network) SendStoreResponse(message Message, address *net.UDPAddr, conn *net.UDPConn) {
-
-	network.kademlia.Data[message.DataHashString] = message.HashedData
+	network.kademlia.Datastore.addData(message.HashedData, message.DataHashString)
 	response := Message{
 		Type: storeResponse,
+	}
+
+	network.sendResponse(response, address, conn)
+
+}
+
+func (network *Network) SendResetTTLResponse(message Message, address *net.UDPAddr, conn *net.UDPConn) {
+	network.kademlia.refreshData(message.DataHashString)
+	fmt.Println("\n\n\nReset TTL with key: " + message.DataHashString + "\n\n")
+	response := Message{
+		Type: resetTTLeResponse,
 	}
 
 	network.sendResponse(response, address, conn)
@@ -294,7 +314,7 @@ func (network *Network) sendResponse(response Message, address *net.UDPAddr, con
 		fmt.Println("Error sending UDP response:", err)
 	}
 
-	fmt.Printf("Sent response to %s,\n response: %s\n", address.String(), jsonResponse)
+	//fmt.Printf("Sent response to %s,\n response: %s\n", address.String(), jsonResponse)
 
 }
 

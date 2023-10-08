@@ -15,12 +15,6 @@ type Client struct {
 	kademlia *server.Kademlia
 }
 
-type ClientMessage struct {
-	Type    string
-	Data    []byte
-	Contact server.Contact
-}
-
 func NewClient(kademlia *server.Kademlia) *Client {
 	return &Client{kademlia: kademlia}
 }
@@ -29,11 +23,12 @@ func (client *Client) Start() {
 	reader := bufio.NewReader(os.Stdin)
 	putString := "put <string> (takes a single argument, the contents of the file you are uploading, and outputs thehash of the object)\n"
 	getString := "get <hash> (takes a hash as its only argument, and outputs the contents of the object and the node it was retrieved from)\n"
+	forgetString := "forget <hash> (takes hash of the object that is no longer to be refreshed, only works on original uploader)\n"
 	exitString := "exit (terminates this node)\n"
-	fmt.Printf("Commands:\n" + putString + getString + exitString)
+	fmt.Printf("Commands:\n" + putString + getString + forgetString + exitString)
 
 	for {
-		fmt.Printf("\nCommands:\n" + putString + getString + exitString)
+		fmt.Printf("\nCommands:\n" + putString + getString + forgetString + exitString)
 		fmt.Printf("\nEnter a command: \n")
 
 		// Read from terminal
@@ -64,8 +59,21 @@ func (client *Client) HandleInput(input []string) error {
 		if len(args) > 1 {
 			return errors.New("\nToo many arguments, can only take one\n")
 		}
+		if len(data) != 64 {
+			return errors.New("\nLength of hash must be exactly 64 characters\n")
+		}
 		//err = client.get(data)
 		client.get(data)
+	case "forget":
+		data := input[1]
+		args := strings.Fields(data)
+		if len(args) > 1 {
+			return errors.New("\nToo many arguments, can only take one\n")
+		}
+		if len(data) != 64 {
+			return errors.New("\nLength of hash must be exactly 64 characters\n")
+		}
+		client.forget(data)
 	case "exit":
 		client.exit()
 	default:
