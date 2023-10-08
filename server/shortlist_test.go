@@ -188,8 +188,8 @@ func TestDropNode(t *testing.T) {
 
 	// Create for loop to check each
 	shortList.dropNode(&contact_2)
-	got := shortList.getContacts()[2]
-	want := shortList_1.getContacts()[2]
+	got := shortList.getContacts()[2].String()
+	want := shortList_1.getContacts()[2].String()
 
 	if got != want {
 		t.Errorf("got %s want %s", got, want)
