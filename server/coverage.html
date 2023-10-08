@@ -59,13 +59,13 @@
 				
 				<option value="file1">kademlia/server/contact.go (100.0%)</option>
 				
-				<option value="file2">kademlia/server/datastore.go (57.1%)</option>
+				<option value="file2">kademlia/server/datastore.go (100.0%)</option>
 				
 				<option value="file3">kademlia/server/kademlia.go (7.7%)</option>
 				
 				<option value="file4">kademlia/server/kademliaid.go (50.0%)</option>
 				
-				<option value="file5">kademlia/server/network.go (87.9%)</option>
+				<option value="file5">kademlia/server/network.go (86.3%)</option>
 				
 				<option value="file6">kademlia/server/routingtable.go (100.0%)</option>
 				
@@ -246,6 +246,16 @@ func (datastore *Datastore) addData(data []byte, key string) <span class="cov8" 
         datastore.resetTTL(key)
 }</span>
 
+// for testing
+func (datastore *Datastore) addDataWithTTL(data []byte, key string, TTL time.Duration) <span class="cov8" title="1">{
+        datastore.mu.Lock()
+        datastore.Data[key] = data
+        now := time.Now()
+        ttl := now.Add(TTL)
+        datastore.TTL[key] = ttl
+        datastore.mu.Unlock()
+}</span>
+
 func (datastore *Datastore) getData(key string) []byte <span class="cov8" title="1">{
         return datastore.Data[key]
 }</span>
@@ -258,12 +268,12 @@ func (datastore *Datastore) resetTTL(key string) <span class="cov8" title="1">{
         datastore.TTL[key] = ttl
 }</span>
 
-func (datastore *Datastore) removeExpired() <span class="cov0" title="0">{
+func (datastore *Datastore) removeExpired() <span class="cov8" title="1">{
         datastore.mu.Lock()
         defer datastore.mu.Unlock()
-        for key := range datastore.Data </span><span class="cov0" title="0">{
+        for key := range datastore.Data </span><span class="cov8" title="1">{
                 ttl := datastore.TTL[key]
-                if datastore.isExpired(ttl) </span><span class="cov0" title="0">{
+                if datastore.isExpired(ttl) </span><span class="cov8" title="1">{
                         delete(datastore.Data, key)
                         delete(datastore.TTL, key)
                         fmt.Println("Deleted expired data with key: " + key)
@@ -271,7 +281,7 @@ func (datastore *Datastore) removeExpired() <span class="cov0" title="0">{
         }
 }
 
-func (datastore *Datastore) isExpired(TTL time.Time) bool <span class="cov0" title="0">{
+func (datastore *Datastore) isExpired(TTL time.Time) bool <span class="cov8" title="1">{
         return time.Now().After(TTL)
 }</span>
 </pre>
@@ -748,7 +758,7 @@ func (network *Network) Listen(ip string) <span class="cov8" title="1">{
                 }
 
                 // Process received data
-                <span class="cov8" title="1">data := buffer[:n]
+                <span class="cov0" title="0">data := buffer[:n]
                 //fmt.Printf("Received message from %s: %s\n", addr, string(data))
 
                 network.handleResponse(data, addr, conn)</span>

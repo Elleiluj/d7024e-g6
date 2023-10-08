@@ -26,6 +26,16 @@ func (datastore *Datastore) addData(data []byte, key string) {
 	datastore.resetTTL(key)
 }
 
+// for testing
+func (datastore *Datastore) addDataWithTTL(data []byte, key string, TTL time.Duration) {
+	datastore.mu.Lock()
+	datastore.Data[key] = data
+	now := time.Now()
+	ttl := now.Add(TTL)
+	datastore.TTL[key] = ttl
+	datastore.mu.Unlock()
+}
+
 func (datastore *Datastore) getData(key string) []byte {
 	return datastore.Data[key]
 }
