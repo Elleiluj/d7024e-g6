@@ -64,11 +64,11 @@ func (network *Network) Listen(ip string) {
 	}
 }
 
-func (network *Network) handleResponse(data []byte, address *net.UDPAddr, conn *net.UDPConn) {
+func (network *Network) handleResponse(data []byte, address *net.UDPAddr, conn *net.UDPConn) string {
 	var message Message
 	if err := json.Unmarshal(data, &message); err != nil {
 		fmt.Println("Error decoding JSON message:", err)
-		return
+		return "error"
 	}
 	sender := message.Sender
 	if sender != nil {
@@ -76,20 +76,23 @@ func (network *Network) handleResponse(data []byte, address *net.UDPAddr, conn *
 	}
 	switch message.Type {
 	case pingMessage:
-		address.Port = port
 		network.SendPingResponse(address, conn)
-	case pingResponse:
-		// do nothing
+		return pingMessage
 	case findContactMessage:
 		network.SendFindContactResponse(message, address, conn)
+		return findContactMessage
 	case findDataMessage:
 		network.SendFindDataResponse(message, address, conn)
+		return findDataMessage
 	case storeMessage:
 		network.SendStoreResponse(message, address, conn)
+		return storeMessage
 	case resetTTLMessage:
 		network.SendResetTTLResponse(message, address, conn)
+		return resetTTLMessage
 	default:
 		fmt.Println("Unknown message type:", message.Type)
+		return "invalid"
 	}
 }
 
@@ -325,4 +328,5 @@ type Message struct {
 	TargetContact  *Contact
 	HashedData     []byte // data to store (value)
 	DataHashString string // data to retrieve (key)
+	test           string // NOTE: for testing only!!!
 }
