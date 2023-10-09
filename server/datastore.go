@@ -6,7 +6,7 @@ import (
 	"time"
 )
 
-const TTLconst = 60 * time.Second
+const TTLconst = 25 * time.Second
 
 type Datastore struct {
 	Data map[string][]byte

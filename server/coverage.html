@@ -61,15 +61,15 @@
 				
 				<option value="file2">kademlia/server/datastore.go (100.0%)</option>
 				
-				<option value="file3">kademlia/server/kademlia.go (7.7%)</option>
+				<option value="file3">kademlia/server/kademlia.go (82.1%)</option>
 				
-				<option value="file4">kademlia/server/kademliaid.go (94.1%)</option>
+				<option value="file4">kademlia/server/kademliaid.go (97.1%)</option>
 				
-				<option value="file5">kademlia/server/network.go (87.9%)</option>
+				<option value="file5">kademlia/server/network.go (88.7%)</option>
 				
 				<option value="file6">kademlia/server/routingtable.go (100.0%)</option>
 				
-				<option value="file7">kademlia/server/shortlist.go (98.2%)</option>
+				<option value="file7">kademlia/server/shortlist.go (100.0%)</option>
 				
 				</select>
 			</div>
@@ -226,7 +226,7 @@ import (
         "time"
 )
 
-const TTLconst = 60 * time.Second
+const TTLconst = 25 * time.Second
 
 type Datastore struct {
         Data map[string][]byte
@@ -314,31 +314,31 @@ func NewKademliaNode(address string) (kademlia Kademlia) <span class="cov8" titl
         return kademlia
 }</span>
 
-func (kademlia *Kademlia) LookupContact(target *Contact) []Contact <span class="cov0" title="0">{
+func (kademlia *Kademlia) LookupContact(target *Contact) []Contact <span class="cov8" title="1">{
         closestNodes := kademlia.RoutingTable.FindClosestContacts(target.ID, alpha)
         shortlist := NewShortList(closestNodes)
 
         closestNode := closestNodes[0]
         network := &amp;Network{kademlia: kademlia}
 
-        for </span><span class="cov0" title="0">{
+        for </span><span class="cov8" title="1">{
                 responseChannel := make(chan []Contact)
                 var inactiveNode chan *Contact
                 numAsked := 0
 
-                for i := 0; i &lt; shortlist.getLength() &amp;&amp; numAsked &lt; alpha; i++ </span><span class="cov0" title="0">{
-                        if !shortlist.nodes[i].isAsked </span><span class="cov0" title="0">{
+                for i := 0; i &lt; shortlist.getLength() &amp;&amp; numAsked &lt; alpha; i++ </span><span class="cov8" title="1">{
+                        if !shortlist.nodes[i].isAsked </span><span class="cov8" title="1">{
                                 go kademlia.sendAsyncFindContactMsg(shortlist.nodes[i].contact, target, responseChannel, inactiveNode, network)
                                 numAsked++
                                 shortlist.addContacts(&lt;-responseChannel)
                                 if inactiveNode != nil </span><span class="cov0" title="0">{
                                         shortlist.dropNode(shortlist.nodes[i].contact)
                                 }</span>
-                                <span class="cov0" title="0">shortlist.nodes[i].isAsked = true</span>
+                                <span class="cov8" title="1">shortlist.nodes[i].isAsked = true</span>
                         }
                 }
-                <span class="cov0" title="0">if shortlist.nodes[0].contact.Address == closestNode.Address || shortlist.numOfAskedNodes() &gt;= bucketSize </span><span class="cov0" title="0">{
-                        if shortlist.nodes[0].contact.Address == closestNode.Address </span><span class="cov0" title="0">{
+                <span class="cov8" title="1">if shortlist.nodes[0].contact.Address == closestNode.Address || shortlist.numOfAskedNodes() &gt;= bucketSize </span><span class="cov8" title="1">{
+                        if shortlist.nodes[0].contact.Address == closestNode.Address </span><span class="cov8" title="1">{
                                 unqueriedNodes := shortlist.findUnqueriedNodes(bucketSize)
                                 for _, node := range unqueriedNodes </span><span class="cov0" title="0">{
                                         contact := node.contact
@@ -350,25 +350,25 @@ func (kademlia *Kademlia) LookupContact(target *Contact) []Contact <span class="
                                         <span class="cov0" title="0">node.isAsked = true</span>
                                 }
                         }
-                        <span class="cov0" title="0">break</span>
+                        <span class="cov8" title="1">break</span>
                 }
-                <span class="cov0" title="0">closestNode = *shortlist.nodes[0].contact</span>
+                <span class="cov8" title="1">closestNode = *shortlist.nodes[0].contact</span>
         }
-        <span class="cov0" title="0">shortlist.sort(target)
+        <span class="cov8" title="1">shortlist.sort(target)
         return shortlist.getContacts()</span>
 }
 
-func (kademlia *Kademlia) sendAsyncFindContactMsg(contact *Contact, target *Contact, responseChannel chan []Contact, inactiveNode chan *Contact, network *Network) <span class="cov0" title="0">{
+func (kademlia *Kademlia) sendAsyncFindContactMsg(contact *Contact, target *Contact, responseChannel chan []Contact, inactiveNode chan *Contact, network *Network) <span class="cov8" title="1">{
         result, err := network.SendFindContactMessage(&amp;kademlia.Me, contact, target)
         if err != nil </span><span class="cov0" title="0">{
                 responseChannel &lt;- result
                 inactiveNode &lt;- contact
-        }</span> else<span class="cov0" title="0"> {
+        }</span> else<span class="cov8" title="1"> {
                 responseChannel &lt;- result
         }</span>
 }
 
-func (kademlia *Kademlia) LookupData(hash string) (*Contact, string) <span class="cov0" title="0">{
+func (kademlia *Kademlia) LookupData(hash string) (*Contact, string) <span class="cov8" title="1">{
         hashID := NewKademliaID(hash)
         target := NewContact(hashID, kademlia.Me.Address)
         var value []byte
@@ -380,15 +380,15 @@ func (kademlia *Kademlia) LookupData(hash string) (*Contact, string) <span class
         closestNode := closestNodes[0]
         network := &amp;Network{kademlia: kademlia}
 
-        for </span><span class="cov0" title="0">{
+        for </span><span class="cov8" title="1">{
                 contactsChannel := make(chan []Contact, bucketSize)
                 valueChannel := make(chan []byte, 1)
                 nodeChannel := make(chan *Contact, 1)
                 inactiveNodeChannel := make(chan *Contact, 1)
                 numAsked := 0
 
-                for i := 0; i &lt; shortlist.getLength() &amp;&amp; numAsked &lt; alpha; i++ </span><span class="cov0" title="0">{
-                        if !shortlist.nodes[i].isAsked </span><span class="cov0" title="0">{
+                for i := 0; i &lt; shortlist.getLength() &amp;&amp; numAsked &lt; alpha; i++ </span><span class="cov8" title="1">{
+                        if !shortlist.nodes[i].isAsked </span><span class="cov8" title="1">{
                                 go kademlia.sendAsyncFindDataMsg(shortlist.nodes[i].contact, &amp;target, hash, contactsChannel, valueChannel, nodeChannel, inactiveNodeChannel, network)
                                 numAsked++
                                 shortlist.addContacts(&lt;-contactsChannel)
@@ -396,13 +396,13 @@ func (kademlia *Kademlia) LookupData(hash string) (*Contact, string) <span class
                                 if inactiveNode != nil </span><span class="cov0" title="0">{
                                         shortlist.dropNode(shortlist.nodes[i].contact)
                                 }</span>
-                                <span class="cov0" title="0">shortlist.nodes[i].isAsked = true
+                                <span class="cov8" title="1">shortlist.nodes[i].isAsked = true
                                 value = &lt;-valueChannel
                                 node = &lt;-nodeChannel</span>
                         }
                 }
-                <span class="cov0" title="0">if shortlist.nodes[0].contact.Address == closestNode.Address || shortlist.numOfAskedNodes() &gt;= bucketSize || value != nil </span><span class="cov0" title="0">{
-                        if shortlist.nodes[0].contact.Address == closestNode.Address </span><span class="cov0" title="0">{
+                <span class="cov8" title="1">if shortlist.nodes[0].contact.Address == closestNode.Address || shortlist.numOfAskedNodes() &gt;= bucketSize || value != nil </span><span class="cov8" title="1">{
+                        if shortlist.nodes[0].contact.Address == closestNode.Address </span><span class="cov8" title="1">{
                                 unqueriedNodes := shortlist.findUnqueriedNodes(bucketSize)
                                 for _, unqueriedNode := range unqueriedNodes </span><span class="cov0" title="0">{
                                         contact := unqueriedNode.contact
@@ -416,36 +416,36 @@ func (kademlia *Kademlia) LookupData(hash string) (*Contact, string) <span class
                                         value = &lt;-valueChannel
                                         node = &lt;-nodeChannel</span>
                                 }
-                                <span class="cov0" title="0">shortlist.sort(&amp;target)</span>
+                                <span class="cov8" title="1">shortlist.sort(&amp;target)</span>
                         }
 
-                        <span class="cov0" title="0">if value != nil </span><span class="cov0" title="0">{
+                        <span class="cov8" title="1">if value != nil </span><span class="cov8" title="1">{
                                 kademlia.resetTTL(network, kademlia.LookupContact(&amp;target), hash)
                         }</span>
-                        <span class="cov0" title="0">break</span>
+                        <span class="cov8" title="1">break</span>
                 }
-                <span class="cov0" title="0">closestNode = *shortlist.nodes[0].contact</span>
+                <span class="cov8" title="1">closestNode = *shortlist.nodes[0].contact</span>
         }
 
-        <span class="cov0" title="0">var str string
-        if value == nil </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">var str string
+        if value == nil </span><span class="cov8" title="1">{
                 str = "\nNo value found with hash: " + hash + "\n"
-        }</span> else<span class="cov0" title="0"> {
+        }</span> else<span class="cov8" title="1"> {
                 str = "\nRetrieved value: " + string(value) + ", from node: " + node.Address + "\n"
         }</span>
-        <span class="cov0" title="0">fmt.Println(str)
+        <span class="cov8" title="1">fmt.Println(str)
         //fmt.Printf("\nRetrieved value: %s, from node: %s\n", value, node.Address)
         return node, string(value)</span>
 }
 
-func (kademlia *Kademlia) sendAsyncFindDataMsg(contact *Contact, target *Contact, hash string, contactsChannel chan []Contact, valueChannel chan []byte, nodeChannel chan *Contact, inactiveNode chan *Contact, network *Network) <span class="cov0" title="0">{
+func (kademlia *Kademlia) sendAsyncFindDataMsg(contact *Contact, target *Contact, hash string, contactsChannel chan []Contact, valueChannel chan []byte, nodeChannel chan *Contact, inactiveNode chan *Contact, network *Network) <span class="cov8" title="1">{
         contacts, value, node, err := network.SendFindDataMessage(&amp;kademlia.Me, contact, target, hash)
         if err != nil </span><span class="cov0" title="0">{
                 contactsChannel &lt;- contacts
                 inactiveNode &lt;- contact
                 valueChannel &lt;- value
                 nodeChannel &lt;- node
-        }</span> else<span class="cov0" title="0"> {
+        }</span> else<span class="cov8" title="1"> {
                 contactsChannel &lt;- contacts
                 inactiveNode &lt;- nil
                 valueChannel &lt;- value
@@ -453,15 +453,15 @@ func (kademlia *Kademlia) sendAsyncFindDataMsg(contact *Contact, target *Contact
         }</span>
 }
 
-func (kademlia *Kademlia) resetTTL(network *Network, contacts []Contact, key string) <span class="cov0" title="0">{
+func (kademlia *Kademlia) resetTTL(network *Network, contacts []Contact, key string) <span class="cov8" title="1">{
         count := 0
-        for _, contact := range contacts </span><span class="cov0" title="0">{
+        for _, contact := range contacts </span><span class="cov8" title="1">{
                 count++
                 network.SendResetTTLMessage(&amp;kademlia.Me, &amp;contact, key)
         }</span>
 }
 
-func (kademlia *Kademlia) Store(data []byte) error <span class="cov0" title="0">{
+func (kademlia *Kademlia) Store(data []byte) error <span class="cov8" title="1">{
         var err error
         network := &amp;Network{kademlia: kademlia}
         hashedData := CreateHash(string(data))
@@ -469,61 +469,61 @@ func (kademlia *Kademlia) Store(data []byte) error <span class="cov0" title="0">
 
         target := NewContact(hashID, kademlia.Me.Address)
         storingNodes := kademlia.LookupContact(&amp;target)
-        for _, node := range storingNodes </span><span class="cov0" title="0">{
+        for _, node := range storingNodes </span><span class="cov8" title="1">{
                 err = network.SendStoreMessage(&amp;kademlia.Me, &amp;node, data, hashedData)
         }</span>
 
-        <span class="cov0" title="0">kademlia.UploadedData = append(kademlia.UploadedData, hashedData)
+        <span class="cov8" title="1">kademlia.UploadedData = append(kademlia.UploadedData, hashedData)
 
-        if err == nil </span><span class="cov0" title="0">{
+        if err == nil </span><span class="cov8" title="1">{
                 fmt.Printf("\nData stored with key: %s\n", hashedData)
         }</span>
 
-        <span class="cov0" title="0">return err</span>
+        <span class="cov8" title="1">return err</span>
 
 }
 
-func (kademlia *Kademlia) Forget(hash string) <span class="cov0" title="0">{
+func (kademlia *Kademlia) Forget(hash string) <span class="cov8" title="1">{
         indexToRemove := -1
-        for index, key := range kademlia.UploadedData </span><span class="cov0" title="0">{
-                if hash == key </span><span class="cov0" title="0">{
+        for index, key := range kademlia.UploadedData </span><span class="cov8" title="1">{
+                if hash == key </span><span class="cov8" title="1">{
                         indexToRemove = index
                         break</span>
                 }
         }
-        <span class="cov0" title="0">if indexToRemove &gt;= 0 &amp;&amp; indexToRemove &lt; len(kademlia.UploadedData) </span><span class="cov0" title="0">{
+        <span class="cov8" title="1">if indexToRemove &gt;= 0 &amp;&amp; indexToRemove &lt; len(kademlia.UploadedData) </span><span class="cov8" title="1">{
                 kademlia.UploadedData = append(kademlia.UploadedData[:indexToRemove], kademlia.UploadedData[indexToRemove+1:]...)
                 fmt.Println("Forgot data with hash: " + hash)
 
-        }</span> else<span class="cov0" title="0"> {
+        }</span> else<span class="cov8" title="1"> {
                 fmt.Println("Hash: \"" + hash + "\" has not been uploaded by this node")
         }</span>
 
 }
 
-func (kademlia *Kademlia) JoinNetwork(knownNode *Contact) <span class="cov0" title="0">{
+func (kademlia *Kademlia) JoinNetwork(knownNode *Contact) <span class="cov8" title="1">{
         fmt.Printf("Joining network through %s...\n", knownNode.String())
         kademlia.RoutingTable.AddContact(*knownNode)
 
         contacts := kademlia.LookupContact(&amp;kademlia.Me)
-        for _, contact := range contacts </span><span class="cov0" title="0">{
+        for _, contact := range contacts </span><span class="cov8" title="1">{
                 kademlia.RoutingTable.AddContact(contact)
         }</span>
 
         // Refresh k-buckets further away than its closest node (lookup random node within the k-bucket range)
-        <span class="cov0" title="0">kademlia.Refresh(contacts[0])</span>
+        <span class="cov8" title="1">kademlia.Refresh(contacts[0])</span>
 }
 
-func (kademlia *Kademlia) RemoveExpiredData() <span class="cov0" title="0">{
-        for </span><span class="cov0" title="0">{
+func (kademlia *Kademlia) RemoveExpiredData() <span class="cov8" title="1">{
+        for </span><span class="cov8" title="1">{
                 kademlia.Datastore.removeExpired()
                 time.Sleep(5 * time.Second)
         }</span>
 }
 
-func (kademlia *Kademlia) RefreshUploadedData() <span class="cov0" title="0">{
-        for </span><span class="cov0" title="0">{
-                for _, key := range kademlia.UploadedData </span><span class="cov0" title="0">{
+func (kademlia *Kademlia) RefreshUploadedData() <span class="cov8" title="1">{
+        for </span><span class="cov8" title="1">{
+                for _, key := range kademlia.UploadedData </span><span class="cov8" title="1">{
                         network := &amp;Network{kademlia: kademlia}
                         hashID := NewKademliaID(key)
                         target := NewContact(hashID, kademlia.Me.Address)
@@ -531,7 +531,7 @@ func (kademlia *Kademlia) RefreshUploadedData() <span class="cov0" title="0">{
                         kademlia.resetTTL(network, contacts, key)
                 }</span>
 
-                <span class="cov0" title="0">time.Sleep(20 * time.Second)</span>
+                <span class="cov8" title="1">time.Sleep(10 * time.Second)</span>
         }
 }
 
@@ -556,7 +556,7 @@ func CreateHash(data string) (hash string) <span class="cov8" title="1">{
 }</span>
 
 // Refresh looks up random nodes in the range of its incomplete buckets to fill them
-func (kademlia *Kademlia) Refresh(closestContact Contact) <span class="cov0" title="0">{
+func (kademlia *Kademlia) Refresh(closestContact Contact) <span class="cov8" title="1">{
         // it refreshes all buckets further away than its closest neighbor, which will be in the
         // occupied bucket with the lowest index.
         // the node selects a random number in that range and does a refresh
@@ -655,7 +655,7 @@ func (kademliaID KademliaID) Less(otherKademliaID *KademliaID) bool <span class=
                         return kademliaID[i] &lt; otherKademliaID[i]
                 }</span>
         }
-        <span class="cov0" title="0">return false</span>
+        <span class="cov8" title="1">return false</span>
 }
 
 // Equals returns true if kademliaID == otherKademliaID (bitwise)
@@ -974,7 +974,7 @@ func (network *Network) SendFindDataResponse(message Message, address *net.UDPAd
                         Type:     findDataResponse,
                         Contacts: closestContacts,
                 }
-        }</span> else<span class="cov0" title="0"> {
+        }</span> else<span class="cov8" title="1"> {
                 response = Message{
                         Type:       findDataResponse,
                         HashedData: value,
@@ -1253,7 +1253,7 @@ func (shortList *ShortList) findUnqueriedNodes(k int) []ShortListNode <span clas
 func (shortList *ShortList) numOfAskedNodes() int <span class="cov8" title="1">{
         askedNodes := 0
         for _, node := range shortList.nodes </span><span class="cov8" title="1">{
-                if node.isAsked </span><span class="cov0" title="0">{
+                if node.isAsked </span><span class="cov8" title="1">{
                         askedNodes++
                 }</span>
         }

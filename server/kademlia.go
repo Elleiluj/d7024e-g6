@@ -243,7 +243,7 @@ func (kademlia *Kademlia) RefreshUploadedData() {
 			kademlia.resetTTL(network, contacts, key)
 		}
 
-		time.Sleep(20 * time.Second)
+		time.Sleep(10 * time.Second)
 	}
 }
 
