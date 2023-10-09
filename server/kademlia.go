@@ -275,7 +275,7 @@ func (kademlia *Kademlia) Refresh(closestContact Contact) {
 
 	closestBucketIndex := kademlia.RoutingTable.getBucketIndex(closestContact.ID)
 	for i := closestBucketIndex + 1; i < IDLength*8; i++ {
-		if kademlia.RoutingTable.buckets[i].list.Len() < bucketSize {
+		if kademlia.RoutingTable.buckets[i].Len() < bucketSize {
 			randomNodeToRefresh := NewContact(RandomKademliaIDInBucket(kademlia.Me.ID, i), "")
 			contacts := kademlia.LookupContact(&randomNodeToRefresh)
 			for _, contact := range contacts {
