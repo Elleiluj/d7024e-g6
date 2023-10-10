@@ -6,10 +6,10 @@ Mobile and distributed computing systems' lab - G6
 docker build ./ -t kademlialab
 docker compose up -d —build
 
-CLI:
+CLI: <br>
 docker attach <containerID>
 
-RESTful:
+RESTful: <br>
 curl -v -X POST -d "your_data_here" http://localhost/:<port>/objects
 
 docker compose down 
