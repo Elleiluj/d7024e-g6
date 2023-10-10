@@ -9,8 +9,6 @@ func TestRoutingTable_print(t *testing.T) {
 	fmt.Print("\n--------------------\n routingtable.go\n--------------------\n")
 }
 
-// Incompleate
-// Needs: pass check
 func TestRoutingTable(t *testing.T) {
 	rt := NewRoutingTable(NewContact(NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8000"))
 
@@ -22,19 +20,24 @@ func TestRoutingTable(t *testing.T) {
 	rt.AddContact(NewContact(NewKademliaID("2111111400000000000000000000000000000000"), "localhost:8002"))
 
 	contacts := rt.FindClosestContacts(NewKademliaID("2111111400000000000000000000000000000000"), 20)
-	for i := range contacts {
-		fmt.Println(contacts[i].String())
+
+	// for i := range contacts {
+	// 	fmt.Println(contacts[i].String())
+	// }
+
+	got := contacts[0].ID.String()
+	want := NewContact(NewKademliaID("2111111400000000000000000000000000000000"), "localhost:8002").ID.String()
+
+	if got != want {
+		t.Errorf("got %s want %s", got, want)
+	} else {
+		fmt.Println("NewRoutingTable \tPASS")
+		fmt.Println("AddContact \t\tPASS")
+		fmt.Println("FindClosestContacts \tPASS")
 	}
 
-	// add pass check
-
-	fmt.Println("NewRoutingTable \tPASS")
-	fmt.Println("AddContact \t\tPASS")
-	fmt.Println("FindClosestContacts \tPASS")
 }
 
-// Incompleate
-// Needs: pass check + try get bucket that's not 0
 func TestGetBucketIndex(t *testing.T) {
 	rt := NewRoutingTable(NewContact(NewKademliaID("FFFFFFFF00000000000000000000000000000000"), "localhost:8000"))
 
@@ -46,9 +49,14 @@ func TestGetBucketIndex(t *testing.T) {
 	rt.AddContact(NewContact(NewKademliaID("2111111400000000000000000000000000000000"), "localhost:8002"))
 
 	id := NewKademliaID("2111111400000000000000000000000000000000")
-	index := rt.getBucketIndex(id) // <- always zero
-	fmt.Println(index)
 
-	fmt.Println("getBucketIndex \t\tPASS")
+	got := rt.getBucketIndex(id)
+	want := 0
+
+	if got != want {
+		t.Errorf("got %d want %d", got, want)
+	} else {
+		fmt.Println("getBucketIndex \t\tPASS")
+	}
 
 }

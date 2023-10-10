@@ -41,8 +41,6 @@ func TestLen_Bucket(t *testing.T) {
 	}
 }
 
-// It's not the best, but works
-// Needs: To check all possible distances
 func TestGetContactAndCalcDistance(t *testing.T) {
 	id_1 := NewKademliaID("FFFFFFFF00000000000000000000000000000000")
 	id_2 := NewKademliaID("00000000FFFFFFFF000000000000000000000000")
@@ -54,10 +52,6 @@ func TestGetContactAndCalcDistance(t *testing.T) {
 
 	bucket.AddContact(contact_1)
 	bucket.AddContact(contact_2)
-
-	// for i := 0; i < bucket.Len(); i++ {
-	// 	fmt.Print(bucket.GetContactAndCalcDistance(id_1)[i], "\n")
-	// }
 
 	got := bucket.GetContactAndCalcDistance(id_1)[0].Distance.String()
 	want := NewKademliaID("ffffffffffffffff000000000000000000000000").String()

@@ -3,9 +3,7 @@ package server
 import (
 	"encoding/json"
 	"fmt"
-	"log"
 	"net"
-	"strings"
 	"sync"
 	"testing"
 	"time"
@@ -14,27 +12,6 @@ import (
 func TestNetwork_print(t *testing.T) {
 	fmt.Print("\n--------------------\n network.go\n--------------------\n")
 }
-
-// Imported from main
-func GetOutboundIP() net.IP {
-	conn, err := net.Dial("udp", "8.8.8.8:80")
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer conn.Close()
-
-	localAddr := conn.LocalAddr().(*net.UDPAddr)
-
-	return localAddr.IP
-}
-func GetBootstrapIP(ip string) string {
-	IPparts := strings.Split(ip, ".")
-	firstPart := IPparts[:len(IPparts)-1]
-	bootstrapIP := strings.Join(firstPart, ".") + "." + "2"
-	return bootstrapIP
-}
-
-// -------------- End Of Import ------------------- //
 
 func TestNewNetwork(t *testing.T) {
 	adress := "localhost:8000"

@@ -106,7 +106,7 @@ func TestNewRandomKademliaID(t *testing.T) {
 		t.Errorf("Expected Kademlia ID length of %d, but got %d", IDLength, len(newKademliaID))
 	}
 	for i, b := range newKademliaID {
-		if b < 0 || b > 255 {
+		if b > 255 {
 			fail = true
 			t.Errorf("Byte at index %d is out of valid range: %d", i, b)
 		}
