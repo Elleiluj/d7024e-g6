@@ -1,0 +1,25 @@
+mode: set
+kademlia/client/client.go:20.51,24.2 3 1
+kademlia/client/client.go:26.31,34.6 6 1
+kademlia/client/client.go:34.6,46.17 7 1
+kademlia/client/client.go:46.17,48.4 1 0
+kademlia/client/client.go:50.3,50.31 1 1
+kademlia/client/client.go:54.57,57.17 3 1
+kademlia/client/client.go:58.10,58.10 0 1
+kademlia/client/client.go:59.13,61.25 2 1
+kademlia/client/client.go:62.13,65.20 3 1
+kademlia/client/client.go:65.20,67.4 1 1
+kademlia/client/client.go:68.3,68.22 1 1
+kademlia/client/client.go:68.22,70.4 1 1
+kademlia/client/client.go:72.3,72.19 1 1
+kademlia/client/client.go:73.16,76.20 3 1
+kademlia/client/client.go:76.20,78.4 1 1
+kademlia/client/client.go:79.3,79.22 1 1
+kademlia/client/client.go:79.22,81.4 1 1
+kademlia/client/client.go:82.3,82.22 1 1
+kademlia/client/client.go:83.14,85.13 2 0
+kademlia/client/client.go:86.10,87.60 1 1
+kademlia/client/client.go:89.2,89.12 1 1
+kademlia/client/handleinput.go:3.46,6.2 2 1
+kademlia/client/handleinput.go:8.40,10.2 1 1
+kademlia/client/handleinput.go:12.43,14.2 1 1
