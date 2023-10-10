@@ -7,16 +7,20 @@ import (
 	"kademlia/server"
 	"os"
 	"strings"
+	"time"
 )
 
 // define put, get, exit etc. also in put, define ping
 
 type Client struct {
-	kademlia *server.Kademlia
+	kademlia  *server.Kademlia
+	sleepTime time.Duration
 }
 
 func NewClient(kademlia *server.Kademlia) *Client {
-	return &Client{kademlia: kademlia}
+	client := Client{kademlia: kademlia}
+	client.sleepTime = 0 * time.Second
+	return &client
 }
 
 func (client *Client) Start() {
@@ -25,7 +29,7 @@ func (client *Client) Start() {
 	getString := "get <hash> (takes a hash as its only argument, and outputs the contents of the object and the node it was retrieved from)\n"
 	forgetString := "forget <hash> (takes hash of the object that is no longer to be refreshed, only works on original uploader)\n"
 	exitString := "exit (terminates this node)\n"
-	fmt.Printf("Commands:\n" + putString + getString + forgetString + exitString)
+	//fmt.Printf("Commands:\n" + putString + getString + forgetString + exitString)
 
 	for {
 		fmt.Printf("\nCommands:\n" + putString + getString + forgetString + exitString)
@@ -42,6 +46,8 @@ func (client *Client) Start() {
 		if err != nil {
 			fmt.Printf("%s", err)
 		}
+
+		time.Sleep(client.sleepTime)
 	}
 }
 
@@ -75,7 +81,8 @@ func (client *Client) HandleInput(input []string) error {
 		}
 		client.forget(data)
 	case "exit":
-		client.exit()
+		fmt.Println("\nTerminating node...")
+		os.Exit(0)
 	default:
 		return errors.New("\nInvalid command: " + command + "\n")
 	}

@@ -1,0 +1,19 @@
+mode: set
+kademlia/router/router.go:17.51,19.2 1 1
+kademlia/router/router.go:21.42,23.77 1 1
+kademlia/router/router.go:23.77,25.3 1 1
+kademlia/router/router.go:27.2,27.84 1 1
+kademlia/router/router.go:27.84,29.25 1 1
+kademlia/router/router.go:29.25,31.18 2 1
+kademlia/router/router.go:31.18,34.5 2 0
+kademlia/router/router.go:35.4,37.20 3 1
+kademlia/router/router.go:37.20,40.5 2 0
+kademlia/router/router.go:40.10,44.5 3 1
+kademlia/router/router.go:45.9,45.31 1 1
+kademlia/router/router.go:45.31,47.4 1 1
+kademlia/router/router.go:47.9,49.4 1 1
+kademlia/router/router.go:52.2,52.91 1 1
+kademlia/router/router.go:52.91,56.18 4 1
+kademlia/router/router.go:56.18,59.4 2 1
+kademlia/router/router.go:59.9,62.4 2 1
+kademlia/router/router.go:66.35,69.2 2 1
